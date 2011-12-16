@@ -205,9 +205,13 @@ e0mcmc.advance.settings <- function(h, ...) {
 					'lambda.ini', 'lambda.k.ini', 'lambda.z.ini', 'omega.ini',
 					'Triangle.ini.low', 'Triangle.ini.up', 
 					'k.ini.low', 'z.ini.low', 'k.ini.up', 'z.ini.up',
+					'Triangle.prior.low', 'Triangle.prior.up',
+					'k.prior.low', 'z.prior.low', 'k.prior.up', 'z.prior.up',
 					'lambda.ini.low', 'lambda.k.ini.low', 'lambda.z.ini.low', 
 					'lambda.ini.up', 'lambda.k.ini.up', 'lambda.z.ini.up',
 					'omega.ini.low', 'omega.ini.up',
+					'Triangle.c.prior.low', 'Triangle.c.prior.up',
+					'k.c.prior.low', 'z.c.prior.low', 'k.c.prior.up', 'z.c.prior.up',
 					'Triangle.c.width', 'k.c.width', 'z.c.width', 'nu', 'dl.p1', 'dl.p2'
 						)
 	get.defaults <- function() {
@@ -369,37 +373,45 @@ e0mcmc.advance.settings <- function(h, ...) {
 
 	priors.f <- gframe("<span color='blue'>Prior parameters and initial values</span>", markup=TRUE, cont=e$adv.g, horizontal=FALSE)
 	normal.g <- ggroup(horizontal=TRUE, cont=priors.f)
-	priors.normal.f <- gframe("<span  color='#0B6138'>Normal priors</span>", markup=TRUE, cont=normal.g,
+	priors.normal.f <- gframe("<span  color='#0B6138'>Normal priors for world parameters</span>", markup=TRUE, cont=normal.g,
 								horizontal=FALSE)
 	normal.flo <- glayout(cont=priors.normal.f)
 	
 	l <- 1 # row 1
 	normal.flo[l,1] <- ''
-	normal.flo[l,2] <- 'prior mean (a)'
-	normal.flo[l,3] <- 'prior sd (delta)'
-	normal.flo[l,4] <- 'init lower'
-	normal.flo[l,5] <- 'init upper'
-	normal.flo[l,6] <- 'init values'
-		
+	normal.flo[l,2] <- 'prior mean\n     (a)'
+	normal.flo[l,3] <- 'prior sd\n (delta)'
+	normal.flo[l,4] <- '   prior\nlower b.'
+	normal.flo[l,5] <- '   prior\nupper b.'
+	normal.flo[l,6] <- ' init\nlower'
+	normal.flo[l,7] <- ' init\nupper'
+	normal.flo[l,8] <- 'init values'
 	lower <- c(defaults$Triangle.ini.low, defaults$k.ini.low, defaults$z.ini.low)
 	upper <- c(defaults$Triangle.ini.up, defaults$k.ini.up, defaults$z.ini.up)
 	ini <- c(unlist(defaults$Triangle.ini), defaults$k.ini, defaults$z.ini)
-	e$a <- e$delta <- e$lower <- e$upper <- e$init <- NULL
+	prior.low <- c(defaults$Triangle.prior.low, defaults$k.prior.low, defaults$z.prior.low)
+	prior.up <- c(defaults$Triangle.prior.up, defaults$k.prior.up, defaults$z.prior.up)
+
+	e$a <- e$delta <- e$lower <- e$upper <- e$prior.low <- e$prior.up <-e$init <- NULL
 	labels <- paste('<span>', c(paste('Triangle<sub>', 1:4, '</sub>', sep=''), 'k', 'z'), ':</span>', sep='')
 	for (i in 1:6) {
 		row <- l + i
 		normal.flo[row,1] <- glabel(labels[i], markup=TRUE, cont=normal.flo)
-		e$a <- c(e$a, normal.flo[row,2] <- gedit(defaults$a[i], width=7, cont=normal.flo))
-		e$delta <- c(e$delta, normal.flo[row,3] <- gedit(defaults$delta[i], width=7, cont=normal.flo))
-		e$lower <- c(e$lower, normal.flo[row,4] <- gedit(lower[i], width=7, cont=normal.flo))
-		e$upper <- c(e$upper, normal.flo[row,5] <-  gedit(upper[i], width=7, cont=normal.flo))
-		e$init  <- c(e$init, normal.flo[row,6] <- gedit(ini[i], width=12, cont=normal.flo))
+		e$a <- c(e$a, normal.flo[row,2] <- gedit(round(defaults$a[i],4), width=7, cont=normal.flo))
+		e$delta <- c(e$delta, normal.flo[row,3] <- gedit(round(defaults$delta[i],3), width=5, cont=normal.flo))
+		e$prior.low <- c(e$prior.low, normal.flo[row,4] <- gedit(prior.low[i], width=5, cont=normal.flo))
+		e$prior.up <- c(e$prior.up, normal.flo[row,5] <- gedit(prior.up[i], width=5, cont=normal.flo))
+		e$lower <- c(e$lower, normal.flo[row,6] <- gedit(lower[i], width=5, cont=normal.flo))
+		e$upper <- c(e$upper, normal.flo[row,7] <-  gedit(upper[i], width=5, cont=normal.flo))
+		e$init  <- c(e$init, normal.flo[row,8] <- gedit(ini[i], width=10, cont=normal.flo))
 		addHandlerChanged(e$init[[i]], action=list(idx=i), handler=function(h1,...) {
 						isempty <- nchar(svalue(e$init[[h1$action$idx]]))==0
 						enabled(e$lower[[h1$action$idx]]) <- isempty
 						enabled(e$upper[[h1$action$idx]]) <- isempty
 						})
 	}
+	widget.defaults[['prior.low']] <- prior.low
+	widget.defaults[['prior.up']] <- prior.up
 	widget.defaults[['lower']] <- lower
 	widget.defaults[['upper']] <- upper
 	widget.defaults[['init']] <- if(is.null(ini)) rep('', 6) else ini
@@ -413,36 +425,56 @@ e0mcmc.advance.settings <- function(h, ...) {
 	linked.pars.list[['k.ini.up']] <- e$upper[[5]]
 	linked.pars.list[['z.ini.low']] <- e$lower[[6]]
 	linked.pars.list[['z.ini.up']] <- e$upper[[6]]
+	linked.pars.list[['Triangle.prior.low']] <- e$prior.low[1:4]
+	linked.pars.list[['Triangle.prior.up']] <- e$prior.up[1:4]
+	linked.pars.list[['k.prior.low']] <- e$prior.low[[5]]
+	linked.pars.list[['k.prior.up']] <- e$prior.up[[5]]
+	linked.pars.list[['z.prior.low']] <- e$prior.low[[6]]
+	linked.pars.list[['z.prior.up']] <- e$prior.up[[6]]
 		
-	ini.normal.f <- gframe("<span  color='#0B6138'>Normal initial values</span>", markup=TRUE, cont=normal.g,
+	ini.normal.f <- gframe("<span  color='#0B6138'>Normal priors for country specific parameters</span>", markup=TRUE, cont=normal.g,
 								horizontal=FALSE)
 	nini.flo <- glayout(cont=ini.normal.f)
 	
 	l <- 1 # row 1
 	nini.flo[l,1] <- ''
-	nini.flo[l,2] <- 'init mean'
-	nini.flo[l,3] <- 'init sd'
-	nini.flo[l,4] <- 'width'
+	nini.flo[l,2] <- '   prior\nlower b.'
+	nini.flo[l,3] <- '   prior\nupper b.'
+	nini.flo[l,4] <- ' init\nmean'
+	nini.flo[l,5] <- 'init\n sd'
+	nini.flo[l,6] <- 'width'
 
+	prior.c.low <- c(defaults$Triangle.c.prior.low, defaults$k.c.prior.low, defaults$z.c.prior.low)
+	prior.c.up <- c(defaults$Triangle.c.prior.up, defaults$k.c.prior.up, defaults$z.c.prior.up)
 	ini.c.means <- c(defaults$Triangle.c.ini.norm[[1]], 
 					defaults$k.c.ini.norm[1], defaults$z.c.ini.norm[1])
 	ini.c.sd <- c(defaults$Triangle.c.ini.norm[[2]], 
 					defaults$k.c.ini.norm[2], defaults$z.c.ini.norm[2])
 	c.width <- c(defaults$Triangle.c.width, defaults$k.c.width, defaults$z.c.width)
-	e$c.means <- e$c.sd <- e$c.width <- NULL
+	e$c.low <- e$c.up <- e$c.means <- e$c.sd <- e$c.width <- NULL
 	c.labels <- paste('<span>', c(paste('Triangle<sup>c</sup><sub>', 1:4, '</sub>', sep=''), 
 						'k<sup>c</sup>', 'z<sup>c</sup>'), ':</span>', sep='')
 	for (i in 1:6) {
 		row <- l + i
 		nini.flo[row,1] <- glabel(c.labels[i], markup=TRUE, cont=nini.flo)
-		e$c.means <- c(e$c.means, nini.flo[row,2] <- gedit(ini.c.means[i], width=5, cont=nini.flo))
-		e$c.sd <- c(e$c.sd, nini.flo[row,3] <- gedit(ini.c.sd[i], width=5, cont=nini.flo))
-		e$c.width <- c(e$c.width, nini.flo[row,4] <- gedit(c.width[i], width=5, cont=nini.flo))
+		e$c.low <- c(e$c.low, nini.flo[row,2] <- gedit(prior.c.low[i], width=5, cont=nini.flo))
+		e$c.up <- c(e$c.up, nini.flo[row,3] <- gedit(prior.c.up[i], width=5, cont=nini.flo))
+		e$c.means <- c(e$c.means, nini.flo[row,4] <- gedit(ini.c.means[i], width=5, cont=nini.flo))
+		e$c.sd <- c(e$c.sd, nini.flo[row,5] <- gedit(ini.c.sd[i], width=5, cont=nini.flo))
+		e$c.width <- c(e$c.width, nini.flo[row,6] <- gedit(c.width[i], width=5, cont=nini.flo))
 	}
+	widget.defaults[['c.low']] <- prior.c.low
+	widget.defaults[['c.up']] <- prior.c.up
 	widget.defaults[['c.means']] <- ini.c.means
 	widget.defaults[['c.sd']] <- ini.c.sd
 	widget.defaults[['c.width']] <- c.width
 
+	linked.pars.list[['Triangle.c.prior.low']] <- e$c.low[1:4]
+	linked.pars.list[['Triangle.c.prior.up']] <- e$c.up[1:4]
+	linked.pars.list[['k.c.prior.low']] <- e$c.low[[5]]
+	linked.pars.list[['k.c.prior.up']] <- e$c.up[[5]]
+	linked.pars.list[['z.c.prior.low']] <- e$c.low[[6]]
+	linked.pars.list[['z.c.prior.up']] <- e$c.up[[6]]
 	linked.pars.tuple[['Triangle.c.ini.norm']] <- list(e$c.means[1:4], e$c.sd[1:4])
 	linked.pars.tuple[['k.c.ini.norm']] <- c(e$c.means[[5]], e$c.sd[[5]])
 	linked.pars.tuple[['z.c.ini.norm']] <- c(e$c.means[[6]], e$c.sd[[6]])
@@ -528,7 +560,7 @@ e0mcmc.advance.settings <- function(h, ...) {
 				cont =  info.gamma.glo)
 	#info.gamma.glo[4,1, expand=FALSE] <- glabel('', cont =  info.gamma.glo)
 	
-	uniform.dlf.g <- ggroup(horizontal=FALSE, cont=gamma.uniform.g, expand=TRUE)
+	uniform.dlf.g <- ggroup(horizontal=FALSE, cont=gamma.uniform.g, expand=FALSE)
 
 	
 	priors.unif.f <- gframe("<span  color='#0B6138'>Uniform priors</span>", markup=TRUE, cont=uniform.dlf.g,
