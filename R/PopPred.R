@@ -7,20 +7,20 @@ popPredTab <- function(pop.w, main.win, wpp.year) {
 				default=eval(formals(pop.predict)$output.dir),
 				no.mcmc=TRUE)
 				
-	nb <- gnotebook(cont=pop.w, expand=TRUE)
+	nb <- gnotebook(container=pop.w, expand=TRUE)
 	
 	# Predictions group
 	pred.g <- ggroup(label="<span color='#B40404'>Make predictions</span>", markup=TRUE,
-							horizontal=FALSE, cont=nb, spacing=10)
+							horizontal=FALSE, container=nb, spacing=10)
 	pred.g.env <- popNewPred.group(pred.g, main.win, parent=ePopPred)
 	
 	# Result group
 	result.g <- ggroup(label="<span color='#B40404'>Explore results</span>", markup=TRUE,
-							horizontal=FALSE, cont=nb)
+							horizontal=FALSE, container=nb)
 	result.g.env <- popResults.group(result.g, main.win, parent=ePopPred)
 	
 	svalue(nb) <- 1
-	label <- glabel(paste('Dependency in use: bayesPop  v.', installed.packages()["bayesPop", "Version"]), cont=pop.w)
+	label <- glabel(paste('Dependency in use: bayesPop  v.', packageVersion("bayesPop")), container=pop.w)
 	font(label) <- c(style='italic', family='serif')
 
 	

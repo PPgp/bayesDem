@@ -12,19 +12,24 @@ create.help.button <- function(topic, package, parent.group, parent.window) {
 		handler=function(h, ...) {
 			oldhtmloption <- options(htmlhelp=FALSE);
 			oldchmoption <- options(chmhelp=FALSE);
-			ghelp(topic=topic, package=package, 
-					cont=gwindow(parent=parent.window, width=700, height=700));
+			ltop <- length(topic)
+			gh <- ghelp(topic=topic[ltop], package=package, 
+					container=gwindow(parent=parent.window, width=700, height=700));
+			if(ltop > 1) {
+				for(i in (ltop-1):1) # create the pages in reverse order in order to have focus on the first one
+					add(gh, list(topic=topic[i], package=package))
+			}
 			options(htmlhelp=oldhtmloption);
 			options(chmhelp=oldchmoption)
 		})
-	gbutton(action=helpaction, cont=parent.group)
+	gbutton(action=helpaction, container=parent.group)
 }
 
 create.sim.dir.widget <- function(env, parent, main.win, default, dir.widget.name='sim.dir', ...) {
-	sim.g <- ggroup(horizontal=TRUE, cont=parent)
-	glabel("Simulation directory:", cont=sim.g)
-	glabel("<span color='red'>*</span>", markup=TRUE, cont=sim.g)
-	env[[dir.widget.name]] <- gfilebrowse(default, type='selectdir', width=40, quote=FALSE, cont=sim.g)
+	sim.g <- ggroup(horizontal=TRUE, container=parent)
+	glabel("Simulation directory:", container=sim.g)
+	glabel("<span color='red'>*</span>", markup=TRUE, container=sim.g)
+	env[[dir.widget.name]] <- gfilebrowse(default, type='selectdir', width=40, quote=FALSE, container=sim.g)
 	create.info.button(dir.widget.name, sim.g, main.win, env, ...)
 }
 
@@ -32,20 +37,20 @@ create.info.button <- function(dir.widget.name, parent.group, parent.window, env
 	infoaction <- gaction(label='Info', icon='info', handler=show.summary,
 					action=list(mw=parent.window, env=env, dir.widget.name=dir.widget.name,
 								type=type, no.mcmc=no.mcmc))
-	gbutton(action=infoaction, cont=parent.group)
+	gbutton(action=infoaction, container=parent.group)
 }
 
 create.graphics.window <- function(parent, title='', dpi=80, ps=10, ...) {
 	e <- new.env()
 	win <- gwindow(title, parent=parent, horizontal=FALSE)
-	g <- ggroup(cont=win, horizontal=FALSE, expand=TRUE)
-	g1 <- ggroup(cont=g, horizontal=TRUE)
-	glabel("Output type:", cont=g1)
+	g <- ggroup(container=win, horizontal=FALSE, expand=TRUE)
+	g1 <- ggroup(container=g, horizontal=TRUE)
+	glabel("Output type:", container=g1)
 	#types <- formals(savePlot)$type
-	e$type <- gdroplist(c("pdf", "postscript", "png", "jpeg", "tiff", "bmp"), cont=g1)
-	gb <- gbutton('Save', cont=g1)
-	g2 <- ggroup(cont=g, horizontal=TRUE, expand=TRUE)
-	ggraphics(cont=g2, ps=ps, dpi=dpi, ...)
+	e$type <- gdroplist(c("pdf", "postscript", "png", "jpeg", "tiff", "bmp"), container=g1)
+	gb <- gbutton('Save', container=g1)
+	g2 <- ggroup(container=g, horizontal=TRUE, expand=TRUE)
+	ggraphics(container=g2, ps=ps, dpi=dpi, ...)
 	addHandlerClicked(gb, handler=saveGraph, action=list(mw=win, env=e, dpi=dpi, dev=dev.cur()))
 	Sys.sleep(1)
 	return(g)
@@ -124,7 +129,7 @@ show.summary <- function(h, ...) {
 	sink()
 	close(con)
 	info.win <- gwindow('Directory Info', parent=h$action$mw, width=500, height=400)
-	gtext(info, cont=info.win)
+	gtext(info, container=info.win)
 
 }
 
@@ -229,6 +234,6 @@ get.tfr.UN.data <- function(type, mcmc.set) {
 get.e0.UN.data <- function(type, mcmc.set) {
 	path <- get.data.path(type)
 	file.name <- file.path(path, paste('UN', mcmc.set$meta$wpp.year, 'e0', 
-								mcmc.set$meta$gender, '.txt', sep=''))
+								mcmc.set$meta$sex, '.txt', sep=''))
 	return(read.tfr.file(file=file.name))
 }

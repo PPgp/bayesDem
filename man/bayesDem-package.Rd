@@ -10,14 +10,14 @@ Provides Graphical user interface for the packages \pkg{bayesTFR}, \pkg{bayesLif
 \details{
 \tabular{ll}{
 Package: \tab bayesDem\cr
-Version: \tab 1.4-0\cr
-Date: \tab 2011-11-17\cr
+Version: \tab 1.5-1\cr
+Date: \tab 2012-04-13\cr
 Depends: \tab R (>= 2.9.0), cairoDevice, gWidgets, gWidgetsRGtk2, bayesTFR, bayesLife, bayesPop\cr
 License: \tab  GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }
 
-The main function of the package is \code{\link{bayesDem.go}} which launches the GUI. It allows to run MCMCs and make probabilistic projections of total fertility rate (TFR) and life expectancy (e0) for all countries of the world, using Bayesian hierarchical models and the United Nations demographic time series. 
+The main function of the package is \code{\link{bayesDem.go}} which launches the GUI. It allows to run MCMCs and make probabilistic projections of total fertility rate (TFR) and life expectancy (e0) for all countries of the world, using Bayesian hierarchical models and the United Nations demographic time series, as well as probabilistic projections of total population.
 
 The GUI has three main tabs, one for estimating and predicting TFR, one for estimating and predicting e0, and one for projecting total population. 
 

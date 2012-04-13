@@ -5,16 +5,16 @@ popResults.group <- function(g, main.win, parent) {
 	
 	graph.defaults <- formals(png)
 
-	nb <- gnotebook(cont=g, expand=TRUE)
+	nb <- gnotebook(container=g, expand=TRUE)
 	
 	traj.g <- ggroup(label="<span color='#0B6138'>Population trajectories</span>", 
-							markup=TRUE, horizontal=FALSE, cont=nb)
+							markup=TRUE, horizontal=FALSE, container=nb)
 	traj.env <- pop.show.trajectories.group(traj.g, main.win, e)
 	pyr.g <- ggroup(label="<span color='#0B6138'>Population pyramid</span>", 
-							markup=TRUE, horizontal=FALSE, cont=nb)
+							markup=TRUE, horizontal=FALSE, container=nb)
 	pyr.env <- pop.show.pyramid.group(pyr.g, main.win, e)
 #	map.g <- ggroup(label="<span color='#0B6138'>Pop world maps</span>", 
-#							markup=TRUE, horizontal=FALSE, cont=nb)
+#							markup=TRUE, horizontal=FALSE, container=nb)
 #	map.env <- pop.show.map.group(map.g, main.win, e)
 
 	svalue(nb) <- 1
@@ -29,52 +29,58 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	defaults.traj.all <- formals(pop.trajectories.plot.all)
 		
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
-									horizontal=FALSE, cont=g)
+									horizontal=FALSE, container=g)
 	e$show.traj.country <- create.country.widget(country.f, defaults.traj.all, 
 									main.win, prediction=TRUE, parent.env=e)
 		
+	sex.time.g <- ggroup(horizontal=TRUE, container=g)
 	age.settings.f <- gframe("<span color='blue'>Sex &amp; age settings</span>", markup=TRUE, 
-								horizontal=TRUE, cont=g)
-	glabel('Sex:', cont=age.settings.f)
-	e$sex <- gdroplist(c('both', 'female', 'male'), cont=age.settings.f, selected=1)
+								horizontal=TRUE, container=sex.time.g)
+	glabel('Sex:', container=age.settings.f)
+	e$sex <- gdroplist(c('both', 'female', 'male'), container=age.settings.f, selected=1)
 	addSpace(age.settings.f, 5)
-	age.gb <- gbutton(" Age ", cont=age.settings.f,
+	age.gb <- gbutton(" Age ", container=age.settings.f,
 				handler=selectAgeMenuPop,
 				action=list(mw=main.win, env=e, multiple=TRUE))
 	e$age <- 'all'
 	addSpace(age.settings.f, 5)
-	e$sum.over.ages <- gcheckbox("Sum over ages", cont=age.settings.f, checked=TRUE,
+	e$sum.over.ages <- gcheckbox("Sum over ages", container=age.settings.f, checked=TRUE,
 							handler=function(h,...){
 								enabled(e$TableB.show.traj) <- svalue(h$obj)})
 	
-	traj.g <- ggroup(horizontal=TRUE, cont=g)
-	traj.settings.f <- gframe("<span color='blue'>Trajectories settings</span>", markup=TRUE, 
-								horizontal=TRUE, cont=traj.g)
-	glabel('CI (%):', cont=traj.settings.f)
-	e$pi <- gedit('80, 95', width=7, cont=traj.settings.f)
-
-	addSpace(traj.settings.f, 10)
-	glabel('# trajectories:', cont=traj.settings.f)
-	e$nr.traj <- gedit(20, width=5, cont=traj.settings.f)
-	
-	addSpring(traj.g)
+	addSpring(sex.time.g)
 	time.f <- gframe("<span color='blue'>Time range</span>", markup=TRUE, 
-									horizontal=TRUE, cont=traj.g)
-	glabel('From year:', cont=time.f)
-	e$start.year <- gedit(defaults.pred$present.year, width=4, cont=time.f)
-	glabel('To year:', cont=time.f)
-	e$end.year <- gedit(defaults.pred$end.year, width=4, cont=time.f)
+									horizontal=TRUE, container=sex.time.g)
+	glabel('From year:', container=time.f)
+	e$start.year <- gedit(defaults.pred$start.year, width=4, container=time.f)
+	glabel('To year:', container=time.f)
+	e$end.year <- gedit(defaults.pred$end.year, width=4, container=time.f)
+	
+	traj.g <- ggroup(horizontal=TRUE, container=g, expand=TRUE)
+	traj.settings.f <- gframe("<span color='blue'>Trajectories settings</span>", markup=TRUE, 
+								horizontal=TRUE, container=traj.g, expand=TRUE)
+	glabel('CI (%):', container=traj.settings.f)
+	e$pi <- gedit('80, 95', width=7, container=traj.settings.f)
+	
+	addSpace(traj.settings.f, 10)
+	e$half.child.variant <- gcheckbox('+/- 0.5 child', checked=defaults.traj$half.child.variant, 
+								container=traj.settings.f)
+	addSpace(traj.settings.f, 10)
+	glabel('# trajectories:', container=traj.settings.f)
+	e$nr.traj <- gedit(20, width=5, container=traj.settings.f)
+	
+
 	
 	graph.f <- gframe("<span color='blue'>Advanced graph parameters</span>", markup=TRUE, 
-									horizontal=FALSE, cont=g)
+									horizontal=FALSE, container=g)
 	e$graph.pars <- create.graph.pars.widgets(graph.f, main.win=main.win)
 	addSpring(g)
-	button.g <- ggroup(horizontal=TRUE, cont=g)
+	button.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='pop.trajectories.plot', package='bayesPop', parent.group=button.g,
 						parent.window=main.win)
 	addSpring(button.g)
 	
-	gbutton('Generate Script', cont=button.g, handler=show.e0.traj, 
+	gbutton('Generate Script', container=button.g, handler=show.e0.traj, 
 								action=list(mw=main.win, env=e, type='plot', script=TRUE,
 											pred.type='pop', package='bayesPop'))
 	addSpace(button.g, 5)
@@ -84,8 +90,8 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=show.e0.traj, 
 						action=list(mw=main.win, env=e, type='plot', script=FALSE,
 											pred.type='pop', package='bayesPop'))
-	e$TableB.show.traj <- gbutton(action=TableB.show.traj.act, cont=button.g)
-	gbutton(action=GraphB.show.traj.act, cont=button.g)
+	e$TableB.show.traj <- gbutton(action=TableB.show.traj.act, container=button.g)
+	gbutton(action=GraphB.show.traj.act, container=button.g)
 	enabled(e$TableB.show.traj) <- svalue(e$sum.over.ages)
 	return(e)
 
@@ -93,14 +99,18 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 
 get.additional.pop.param <- function(e, script, type, ...) {
 	if (e$age==0) e$age<- 'all'
-	param.names <- list(text=c('sex'),logical=c('sum.over.ages'))
+	param.names <- list(text=c('sex'),logical=c('sum.over.ages', 'half.child.variant'))
 	quote <- if(type=='table') script else TRUE
 	param <- c(get.parameters(param.names, env=e, quote=quote), 
-			get.parameters(list(numtext='age'), env=e, quote=quote, retrieve.from.widget=FALSE))
-	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages'), 
-					 table=c('pi', 'country', 'sex', 'age'),
+			get.parameters(list(numtext='age'), env=e, quote=quote, retrieve.from.widgets=FALSE))
+	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant'), 
+					 table=c('pi', 'country', 'sex', 'age', 'half.child.variant'),
+					 pred=c(),
 					 table.decimal=0))
 }
+
+get.pop.table.title <- function(country, pred) 
+	return (country)
 
 pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	e <- new.env()
@@ -112,53 +122,53 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	defaults.traj.pyr <- formals(pop.trajectories.pyramid)
 		
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
-									horizontal=FALSE, cont=g)
+									horizontal=FALSE, container=g)
 	e$show.pyr.country <- create.country.widget(country.f, defaults.pyr.all, 
 									main.win, prediction=TRUE, parent.env=e, disable.table.button=FALSE)
 		
 	type.settings.f <- gframe("<span color='blue'>Type &amp; Time settings</span>", markup=TRUE, 
-								horizontal=FALSE, cont=g)
-	type.g1 <- ggroup(horizontal=TRUE, cont=type.settings.f)
-	e$is.traj.pyr <- gcheckbox("Trajectory pyramid", cont=type.g1, checked=FALSE,
+								horizontal=FALSE, container=g)
+	type.g1 <- ggroup(horizontal=TRUE, container=type.settings.f)
+	e$is.traj.pyr <- gcheckbox("Trajectory pyramid", container=type.g1, checked=FALSE,
 						handler=function(h,...) enabled(e$nr.traj) <- svalue(h$obj))
 	addSpace(type.g1, 10)
-	e$proportion <- gcheckbox("Show x-axis as proportion", cont=type.g1, checked=defaults.pyr$proportion)
+	e$proportion <- gcheckbox("Show x-axis as proportion", container=type.g1, checked=defaults.pyr$proportion)
 	
-	type.g2 <- ggroup(horizontal=TRUE, cont=type.settings.f)
-	year.gb <- gbutton(" Years ", cont=type.g2,
+	type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
+	year.gb <- gbutton(" Years ", container=type.g2,
 				handler=selectYearsMenuPop,
 				action=list(mw=main.win, env=e, multiple=TRUE))
-	glabel(":", cont=type.g2)
-	#e$year <- glabel(paste(defaults.pred$present.year, "        "), cont=type.settings.f)
-	e$year <- gedit(defaults.pred$present.year, width=10, cont=type.g2)	
+	glabel(":", container=type.g2)
+	#e$year <- glabel(paste(defaults.pred$present.year, "        "), container=type.settings.f)
+	e$year <- gedit(defaults.pred$present.year, width=10, container=type.g2)	
 	addSpace(type.g2, 10)
-	glabel('Highest age category:', cont=type.g2)
-	e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, cont=type.g2)
+	glabel('Highest age category:', container=type.g2)
+	e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, container=type.g2)
 
-	#type.g2 <- ggroup(horizontal=TRUE, cont=type.settings.f)
-	#e$proportion <- gcheckbox("Show as proportion", cont=type.g2, checked=TRUE)
+	#type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
+	#e$proportion <- gcheckbox("Show as proportion", container=type.g2, checked=TRUE)
 						
 	traj.settings.f <- gframe("<span color='blue'>Uncertainty settings</span>", markup=TRUE, 
-								horizontal=TRUE, cont=g)
-	glabel('CI (%):', cont=traj.settings.f)
-	e$pi <- gedit('80, 95', width=7, cont=traj.settings.f)
+								horizontal=TRUE, container=g)
+	glabel('CI (%):', container=traj.settings.f)
+	e$pi <- gedit('80, 95', width=7, container=traj.settings.f)
 
 	addSpace(traj.settings.f, 10)
-	glabel('# trajectories:', cont=traj.settings.f)
-	e$nr.traj <- gedit(20, width=5, cont=traj.settings.f)
+	glabel('# trajectories:', container=traj.settings.f)
+	e$nr.traj <- gedit(20, width=5, container=traj.settings.f)
 	enabled(e$nr.traj) <- svalue(e$is.traj.pyr)
 	addSpring(g)
-	button.g <- ggroup(horizontal=TRUE, cont=g)
+	button.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='pop.pyramid', package='bayesPop', parent.group=button.g,
 						parent.window=main.win)
 	addSpring(button.g)
 	
-	gbutton('Generate Script', cont=button.g, handler=show.pop.pyramid, 
+	gbutton('Generate Script', container=button.g, handler=show.pop.pyramid, 
 								action=list(mw=main.win, env=e, script=TRUE))
 	addSpace(button.g, 5)
 	GraphB.show.pyr.act <- gaction(label='Graph', icon='lines', handler=show.pop.pyramid, 
 						action=list(mw=main.win, env=e, script=FALSE))
-	gbutton(action=GraphB.show.pyr.act, cont=button.g)
+	gbutton(action=GraphB.show.pyr.act, container=button.g)
 	return(e)
 }
 
@@ -180,7 +190,7 @@ show.pop.pyramid <- function(h, ...) {
 					get.parameters(list(text=c('output.dir', 'output.type'), 
 										logical='verbose', numeric='country'), 
 									param.env.rest, quote=TRUE,
-									retrieve.from.widget=FALSE))
+									retrieve.from.widgets=FALSE))
 	param.env$age <- 1:param.env$age
 	param.pred <- param.env['sim.dir']
 	
@@ -210,7 +220,7 @@ show.pop.pyramid <- function(h, ...) {
 				cmd <- paste(cmd, pyr.command, '(pred,', 
 					paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ',)\n')
 			}
-			gtext(cmd, cont=script.text)
+			gtext(cmd, container=script.text)
 		} else {
 			base.cmd <- cmd
 			for(year in years) {
@@ -229,7 +239,7 @@ show.pop.pyramid <- function(h, ...) {
 		cmd <- paste(cmd, ')', sep='')
 		if (h$action$script) {
 			script.text <- gwindow('bayesPop commands', parent=h$action$mw)
-			gtext(cmd, cont=script.text)
+			gtext(cmd, container=script.text)
 		} else {
 			eval(parse(text=cmd))
 		}
@@ -254,14 +264,14 @@ selectAgeMenuPop <- function(h, ...) {
 								h$action$env$age.ok.handler <- NULL
 							},
 							action=list(env=h$action$env))
-		t.group <- ggroup(horizontal=FALSE, cont=win)
-		h$action$env$age.gt <- gtable(h$action$env$age.table, cont=t.group, 
+		t.group <- ggroup(horizontal=FALSE, container=win)
+		h$action$env$age.gt <- gtable(h$action$env$age.table, container=t.group, 
 					expand=TRUE, multiple=h$action$multiple, handler=age.selected)
-		b.group <- ggroup(horizontal=TRUE, cont=t.group)
-		gbutton('Cancel', cont=b.group, handler=function(h, ...) 
+		b.group <- ggroup(horizontal=TRUE, container=t.group)
+		gbutton('Cancel', container=b.group, handler=function(h, ...) 
 					visible(win) <- FALSE)
 		addSpring(b.group)
-		h$action$env$age.okbutton <- gbutton('OK', cont=b.group)
+		h$action$env$age.okbutton <- gbutton('OK', container=b.group)
 	}
 	if(!is.null(h$action$env$age.ok.handler)) 
 		removehandler(h$action$env$age.okbutton, h$action$env$age.ok.handler)
@@ -294,14 +304,14 @@ selectYearsMenuPop <- function(h, ...) {
 								h$action$env$year.ok.handler <- NULL
 							},
 							action=list(env=h$action$env))
-		t.group <- ggroup(horizontal=FALSE, cont=win)
-		h$action$env$year.gt <- gtable(h$action$env$year.table, cont=t.group, 
+		t.group <- ggroup(horizontal=FALSE, container=win)
+		h$action$env$year.gt <- gtable(h$action$env$year.table, container=t.group, 
 					expand=TRUE, multiple=h$action$multiple, handler=year.selected)
-		b.group <- ggroup(horizontal=TRUE, cont=t.group)
-		gbutton('Cancel', cont=b.group, handler=function(h, ...) 
+		b.group <- ggroup(horizontal=TRUE, container=t.group)
+		gbutton('Cancel', container=b.group, handler=function(h, ...) 
 					visible(win) <- FALSE)
 		addSpring(b.group)
-		h$action$env$year.okbutton <- gbutton('OK', cont=b.group)
+		h$action$env$year.okbutton <- gbutton('OK', container=b.group)
 	}
 	if(!is.null(h$action$env$year.ok.handler)) 
 		removehandler(h$action$env$year.okbutton, h$action$env$year.ok.handler)
