@@ -1,3 +1,10 @@
+1.6-1 (05/17/2012)
+-----
+Fixed warnings in Results tabs about non-existing predictions.
+
+In the Population Projection tab - results - pyramids: Added option for including a comparison year 
+into the pyramid.
+
 1.6-0 (05/03/2012)
 -----
 In the Life Expectancy tab - results - trajectories: Added options of plotting 

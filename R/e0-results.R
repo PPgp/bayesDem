@@ -137,8 +137,9 @@ show.e0.traj <- function(h, ...) {
 									list(e, script=h$action$script, type=show.type))
 	param.env <- c(param.env, add.param.names[['add']])
 	param.pred <- param.env[c('sim.dir', add.param.names[['pred']])]
-	
-	pred <- do.call(paste('get.', pred.type, '.prediction', sep=''), param.pred)
+	param.pred.ev <- param.pred
+	param.pred.ev[['sim.dir']] <- get.parameters(list(text='sim.dir'), env=e, quote=FALSE) # get it now unquoted (to avoid double quotes if script is TRUE)
+	pred <- do.call(paste('get.', pred.type, '.prediction', sep=''), param.pred.ev)
 	if(h$action$script) {
 		cmd <- paste('pred <- get.', pred.type, '.prediction(', 
 					paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 

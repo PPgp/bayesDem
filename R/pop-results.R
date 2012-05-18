@@ -139,6 +139,9 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 						handler=function(h,...) enabled(e$nr.traj) <- svalue(h$obj))
 	addSpace(type.g1, 10)
 	e$proportion <- gcheckbox("Show x-axis as proportion", container=type.g1, checked=defaults.pyr$proportion)
+	addSpace(type.g1, 10)
+	glabel('Highest age category:', container=type.g1)
+	e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, container=type.g1)
 	
 	type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
 	year.gb <- gbutton(" Years ", container=type.g2,
@@ -148,8 +151,14 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	#e$year <- glabel(paste(defaults.pred$present.year, "        "), container=type.settings.f)
 	e$year <- gedit(defaults.pred$present.year, width=10, container=type.g2)	
 	addSpace(type.g2, 10)
-	glabel('Highest age category:', container=type.g2)
-	e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, container=type.g2)
+	glabel("Comparison year:", container=type.g2)
+	past.year.gb <- gdroplist(c('None', 'present', seq(from=2003, to=1948, by=-5)), container=type.g2,
+						handler=function(h,...){
+							val <- svalue(h$obj)
+							h$action$env$draw.past.year <- if(val=='None') FALSE else {if(val=='present') TRUE else val}
+						}, action=list(env=e))
+	e$draw.past.year <- FALSE
+
 
 	#type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
 	#e$proportion <- gcheckbox("Show as proportion", container=type.g2, checked=TRUE)
@@ -186,13 +195,13 @@ show.pop.pyramid <- function(h, ...) {
 	if(is.null(country.pars)) return(NULL)
 	traj.pyramid <- svalue(e$is.traj.pyr)
 	param.names.all <- list(text='sim.dir', numvector=c('pi', 'year'), 
-							numeric='age', logical='proportion')
+							numeric='age', logical=c('proportion'))
 	if(traj.pyramid) param.names.all$numeric <- c(param.names.all$numeric, 'nr.traj')
 
 	param.env <- get.parameters(param.names.all, env=e, quote=h$action$script)
 	param.env.rest <- list(country=country.pars$code, output.dir=country.pars$output.dir,
 							output.type=country.pars$output.type, verbose=TRUE)
-	param.env <- c(param.env, 
+	param.env <- c(param.env, list(draw.past.year=e$draw.past.year),
 					get.parameters(list(text=c('output.dir', 'output.type'), 
 										logical='verbose', numeric='country'), 
 									param.env.rest, quote=TRUE,
@@ -208,7 +217,7 @@ show.pop.pyramid <- function(h, ...) {
 	} else {	
 		cmd <- ''
 	}
-	param.plot1c <- param.env[c('pi', 'age', 'year', 'proportion')]
+	param.plot1c <- param.env[c('pi', 'age', 'year', 'proportion', 'draw.past.year')]
 	if(traj.pyramid) {
 		param.plot1c <- c(param.plot1c, param.env['nr.traj'])
 		pyr.command <- 'pop.trajectories.pyramid'
@@ -234,7 +243,7 @@ show.pop.pyramid <- function(h, ...) {
 				cmd <- paste(base.cmd, pyr.command, '(pred,', 
 					paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ',)\n')
 				create.graphics.window(parent=h$action$mw, title=paste("Pyramid for", country.pars$name), 
-										ps=8, width=700, height=500)
+										ps=9, width=700, height=500)
 				eval(parse(text=cmd))
 			}
 		}
@@ -302,7 +311,7 @@ selectYearsMenuPop <- function(h, ...) {
 						title='Input Error', icon='error')
         	return(NULL)
 		}
-		h$action$env$year.table <- data.frame(Mid.year=pred$proj.years)
+		h$action$env$year.table <- data.frame(Mid.year=c(as.integer(colnames(pred$inputs$pop.matrix[['male']])), pred$proj.years))
 		h$action$env$year.sel.win <- win <- gwindow('Select years', 
 							parent=h$action$mw, height=450, width=100,
 							handler=function(h, ...) {
