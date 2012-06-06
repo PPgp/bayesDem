@@ -1,3 +1,10 @@
+1.7-0 (06/06/2012)
+-----
+In the Population Projection tab - results - pyramids: Modified to reflect changes in the bayesPop
+package. Mainly putting multiple years into pyramid plots.
+
+Population Projection tab - results: Added an aggregation droplist. It can now deal with predictions that are aggregations. 
+
 1.6-1 (05/17/2012)
 -----
 Fixed warnings in Results tabs about non-existing predictions.
