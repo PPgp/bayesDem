@@ -6,7 +6,7 @@ e0PredTab <- function(e0w, main.win, wpp.year) {
 				main.win=main.win,
 				default=eval(formals(run.e0.mcmc)$output.dir))
 				
-	nb <- gnotebook(container=e0w, expand=TRUE)
+	nb <- bDem.gnotebook(container=e0w, expand=TRUE)
 	# Run MCMC group
 	# color chosen from http://html-color-codes.info
 	mcmc.g <- ggroup(label="<span color='#B40404'>Run MCMC</span>", markup=TRUE, 

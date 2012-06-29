@@ -2,58 +2,55 @@ popNewPred.group <- function(g, main.win, parent) {
 	e <- new.env()
 	defaults <- formals(pop.predict) # default argument values
 	e$output.dir <- e$sim.dir <- parent$sim.dir
+	leftcenter <- c(-1,0)
+	addSpace(g, 10)
+	pred.g <- gframe("<span color='blue'>Prediction settings</span>", markup=TRUE, horizontal=FALSE, container=g)
+	pred.g1 <- glayout(container=pred.g)
+	pred.g1[1,1, anchor=leftcenter] <- glabel("End year:", container=pred.g1)
+	pred.g1[1,2] <- e$end.year <- gedit(defaults$end.year, width=4, container=pred.g1)
+	pred.g1[1,3, anchor=leftcenter] <- glabel("     WPP year:", container=pred.g1)
+	pred.g1[1,4, anchor=leftcenter] <- glabel(parent$wpp.year, container=pred.g1)
+	pred.g1[2,1, anchor=leftcenter] <- glabel("Start year:", container=pred.g1)
+	pred.g1[2,2] <- e$start.year <- gedit(defaults$start.year, width=4, container=pred.g1)
+	pred.g1[2,3, anchor=leftcenter] <- glabel("Present year:", container=pred.g1)
+	pred.g1[1,4] <- e$present.year <- gedit(defaults$present.year, width=4, container=pred.g1)
+	pred.g1[1,5, anchor=leftcenter] <- glabel("Nr. trajectories:", container=pred.g1)
+	pred.g1[1,6] <- e$nr.traj <- gedit(defaults$nr.traj, width=5, container=pred.g1)
+
+	#e$replace.output <- gcheckbox("Overwrite existing prediction", 
+	#								checked=defaults$replace.output, container=pred.g2)
+	pred.g1[2,5:6] <- e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=pred.g1)
 	
-	pred.g <- gframe("<span color='blue'>Prediction</span>", markup=TRUE, horizontal=FALSE, container=g)
-	pred.g1 <- ggroup(horizontal=TRUE, container=pred.g)
-	glabel("End year:", container=pred.g1)
-	glabel("<span color='red'>*</span>", markup=TRUE, container=pred.g1)
-	e$end.year <- gedit(defaults$end.year, width=4, container=pred.g1)
-	addSpace(pred.g1, 5)
-	glabel("Start year:", container=pred.g1)
-	glabel("<span color='red'>*</span>", markup=TRUE, container=pred.g1)
-	e$start.year <- gedit(defaults$start.year, width=4, container=pred.g1)
-	addSpace(pred.g1, 5)
-	glabel("Present year:", container=pred.g1)
-	glabel("<span color='red'>*</span>", markup=TRUE, container=pred.g1)
-	e$present.year <- gedit(defaults$present.year, width=4, container=pred.g1)
-	glabel("     WPP year:", container=pred.g1)
-	glabel(parent$wpp.year, container=pred.g1)
-	
-	pred.g2 <- ggroup(horizontal=TRUE, container=pred.g)
-	glabel("Nr. of trajectories:", container=pred.g2)
-	e$nr.traj <- gedit(defaults$nr.traj, width=5, container=pred.g2)
-	addSpace(pred.g2, 5)
-	e$replace.output <- gcheckbox("Overwrite existing prediction", 
-									checked=defaults$replace.output, container=pred.g2)
-	addSpace(pred.g2, 5)
-	e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=pred.g2)
-	
+	addSpace(g, 10)
 	countries.g <- gframe("<span color='blue'>Countries selection</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
-	countries.g1 <- ggroup(horizontal=TRUE, container=countries.g)
-	e$all.countries <- gcheckbox("All countries", checked=TRUE, container=countries.g1,
+	countries.g1 <- glayout(horizontal=TRUE, container=countries.g)
+	countries.g1[1,1] <- e$all.countries <- gcheckbox("All countries", checked=TRUE, container=countries.g1,
 									handler=function(h,...){
 										enabled(countries.gb) <- !svalue(h$obj)
 										enabled(e$all.remaining.countries) <- !svalue(h$obj)
 										})
-	addSpace(countries.g1, 20)
-	countries.gb <- gbutton("  Select countries  ", container=countries.g1,
+	countries.g1[1,2] <- countries.gb <- bDem.gbutton("  Select countries  ", container=countries.g1,
 				handler=selectCountryMenuPop,
-				action=list(mw=main.win, env=e, multiple=TRUE, wpp.year=parent$wpp.year))
+				action=list(mw=main.win, env=e, multiple=TRUE, wpp.year=parent$wpp.year, label.widget.name='country.label'))
 	addSpace(countries.g1, 10)
-	e$all.remaining.countries <- gcheckbox("All countries without prediction", checked=FALSE, container=countries.g1,
+	countries.g1[2,1] <- e$all.remaining.countries <- gcheckbox("All countries without prediction", 
+									checked=FALSE, container=countries.g1,
 									handler=function(h,...){
 										enabled(countries.gb) <- !svalue(h$obj)
 										enabled(e$all.countries) <- !svalue(h$obj)
 										})
+	countries.g1[2,2, anchor=leftcenter] <- e$country.label <- glabel('', container=countries.g1)
 	enabled(countries.gb) <- !svalue(e$all.countries)
 	enabled(e$all.remaining.countries) <- !svalue(e$all.countries)
 	
 	e$inputs <- list()				
 	addSpace(g, 20)
-	gbutton("Projection inputs", markup=TRUE, container=g,
+	bDem.gbutton("Projection inputs", markup=TRUE, container=g,
 				handler=OptInputFilesPopPred,
 				action=list(mw=main.win, env=e, defaults=defaults))
+	addSpace(g, 10)
+	.create.status.label(g, e)
 
 	addSpring(g)
 	button.g <- ggroup(horizontal=TRUE, container=g)
@@ -61,9 +58,9 @@ popNewPred.group <- function(g, main.win, parent) {
 				parent.group=button.g,
 						parent.window=main.win)
 	addSpring(button.g)
-	gbutton(' Generate Script ', container=button.g, handler=run.pop.prediction,
-				action=list(mw=main.win, env=e, script=TRUE, wpp.year=parent$wpp.year))
-	gbutton(action=gaction(label=' Make Prediction ', icon='evaluate', handler=run.pop.prediction, 
+	create.generate.script.button(handler=run.pop.prediction, 
+							action=list(mw=main.win, env=e, script=TRUE, wpp.year=parent$wpp.year), container=button.g)
+	bDem.gbutton(action=gaction(label=' Make Prediction ', icon='evaluate', handler=run.pop.prediction, 
 				action=list(mw=main.win, env=e, script=FALSE, wpp.year=parent$wpp.year)), 
 				container=button.g)
 	return(e)					
@@ -77,7 +74,7 @@ run.pop.prediction <- function(h, ...) {
 	#								e0F.sim.dir='e0 female'), env=e$inputs)) return()
 	param.names <- list(numeric=c('end.year', 'start.year', 'present.year', 'nr.traj'), 
 						text=c('output.dir'),
-						logical=c('verbose', 'replace.output')
+						logical=c('verbose')
 						)
 	param.input.names.opt <- list(
 		text=c('tfr.sim.dir', 'tfr.file', 'e0M.sim.dir', 'e0M.file', 'e0F.sim.dir', 'e0F.file',
@@ -103,22 +100,41 @@ run.pop.prediction <- function(h, ...) {
 		if (svalue(e$all.remaining.countries)) params$countries <- NA
 		else params$countries <- e$selected.countries
 	}
+	simdir <- get.parameters(list(text='output.dir'), e, quote=FALSE)$output.dir # to avoid double quoting if script is TRUE
+	if(has.pop.prediction(output.dir=simdir)) {
+		params[['replace.output']] <- FALSE
+		if (gconfirm(paste('Prediction for', simdir, 
+								'already exists.\nDo you want to overwrite existing results?'),
+				icon='question', parent=h$action$mw))
+			params[['replace.output']] <- TRUE
+		else return(NULL)
+	}
+
 	if (h$action$script) {
-		script.text <- gwindow('bayesPop commands', parent=h$action$mw)
 		cmd <- paste('pop.predict(', paste(paste(names(params), params, sep='='), collapse=', '), sep=' ')
 		if (length(params.inp) > 0)
 			cmd <- paste(cmd, ', inputs = list(', paste(paste(names(params.inp), params.inp, sep='='), collapse=', '),')', sep=' ')
 		cmd <- paste(cmd, ')', sep='')
-		gtext(cmd, container=script.text)
+		create.script.widget(cmd, h$action$mw, package="bayesPop")
 	} else {
-		if(!params[['replace.output']] && has.pop.prediction(sim.dir=params[['output.dir']])) {
-				gmessage(paste('Prediction for', params[['output.dir']], 
-								'already exists.\nCheck "Overwrite existing prediction" to delete it.'))
-				return()
-		}
-		do.call('pop.predict', c(params, if (length(params.inp) > 0) list(inputs=params.inp) else NULL))
+		.run.prediction(e, handler=get.pop.prediction.status, option='bDem.Poppred', 
+								call='pop.predict', 
+								params=c(params, if (length(params.inp) > 0) list(inputs=params.inp) else NULL), 
+								sim.name='Pop prediction', main.win=h$action$mw,
+								action=list(sb=e$statuslabel),
+								interval=1000)
 	}
 
+}
+
+get.pop.prediction.status <- function(h, ...) {
+	sb <- h$action$sb
+	ncountries <- getOption('bDem.Poppred.ncountries.total', default=-1)
+	ncountries.done <- getOption('bDem.Poppred.ncountries.done', default=0)
+	status <- 'Running Pop prediction ...'
+	if(ncountries >= 0)
+		status <- paste(status, ncountries.done, ' countries finished out of', ncountries, 'countries.')
+	svalue(sb) <- status
 }
 
 OptInputFilesPopPred <- function(h, ...) {
@@ -239,6 +255,8 @@ selectCountryMenuPop <- function(h, ...) {
 	country.selected <- function(h1, ...) {
 		h$action$env$selected.countries <- svalue(h$action$env$country.gt)
 		visible(h$action$env$country.sel.win) <- FALSE
+		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) 
+			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(h$action$env$selected.countries, collapse=',')
 	}
 	if (!is.null(h$action$env$country.sel.win)) 
 			visible(h$action$env$country.sel.win) <- TRUE

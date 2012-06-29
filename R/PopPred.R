@@ -7,7 +7,7 @@ popPredTab <- function(pop.w, main.win, wpp.year) {
 				default=eval(formals(pop.predict)$output.dir),
 				no.mcmc=TRUE)
 				
-	nb <- gnotebook(container=pop.w, expand=TRUE)
+	nb <- bDem.gnotebook(container=pop.w, expand=TRUE)
 	
 	# Predictions group
 	pred.g <- ggroup(label="<span color='#B40404'>Make predictions</span>", markup=TRUE,

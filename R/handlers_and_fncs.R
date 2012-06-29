@@ -7,6 +7,16 @@ selectDir <- function(h, ...) {
 	
 }
 
+set.widget.basecolor <- function(widget, color, state="normal") {
+	gtk.widget <- getToolkitWidget(widget)
+	gtk.widget$modifyBase(state, color)
+} 
+
+set.widget.bgcolor <- function(widget, color, state="normal") {
+	gtk.widget <- getToolkitWidget(widget)
+	gtk.widget$modifyBg(state, color)
+} 
+
 create.help.button <- function(topic, package, parent.group, parent.window) {
 	helpaction <- gaction(label='Help', icon='help', 
 		handler=function(h, ...) {
@@ -22,22 +32,52 @@ create.help.button <- function(topic, package, parent.group, parent.window) {
 			options(htmlhelp=oldhtmloption);
 			options(chmhelp=oldchmoption)
 		})
-	gbutton(action=helpaction, container=parent.group)
+	bDem.gbutton(action=helpaction, container=parent.group)
 }
+
+create.generate.script.button <- function(handler, action, container) {
+	bDem.gbutton(action=gaction(label=' Generate Script ', icon='justify-fill', handler=handler,
+							action=action), container=container)
+}
+
+bDem.gfilebrowse <- function(...) {
+	fb <- gfilebrowse(...)
+	get.filebrowse.button(fb)$modifyBg("normal", color.button)
+	return(fb)
+}
+
+bDem.gbutton <- function(...) {
+	b <- gbutton(...)
+	set.widget.bgcolor(b, color.button)
+	set.widget.bgcolor(b, color.button, state='insensitive')
+	return(b)
+}
+
+bDem.gnotebook <- function(...) {
+	nb <- gnotebook(...)
+	set.widget.bgcolor(nb, color.main)
+	return(nb)
+}
+
 
 create.sim.dir.widget <- function(env, parent, main.win, default, dir.widget.name='sim.dir', ...) {
 	sim.g <- ggroup(horizontal=TRUE, container=parent)
 	glabel("Simulation directory:", container=sim.g)
-	glabel("<span color='red'>*</span>", markup=TRUE, container=sim.g)
-	env[[dir.widget.name]] <- gfilebrowse(default, type='selectdir', width=40, quote=FALSE, container=sim.g)
+	#glabel("<span color='red'>*</span>", markup=TRUE, container=sim.g)
+	env[[dir.widget.name]] <- bDem.gfilebrowse(default, type='selectdir', width=40, quote=FALSE, container=sim.g)
 	create.info.button(dir.widget.name, sim.g, main.win, env, ...)
+}
+
+get.filebrowse.button <- function(widget) {
+	# got this hack from John Verzani
+	return(widget@widget@block@widget@widget[[1]][[2]][[1]])
 }
 
 create.info.button <- function(dir.widget.name, parent.group, parent.window, env, type, no.mcmc=FALSE) {
 	infoaction <- gaction(label='Info', icon='info', handler=show.summary,
 					action=list(mw=parent.window, env=env, dir.widget.name=dir.widget.name,
 								type=type, no.mcmc=no.mcmc))
-	gbutton(action=infoaction, container=parent.group)
+	bDem.gbutton(action=infoaction, container=parent.group)
 }
 
 create.graphics.window <- function(parent, title='', dpi=80, ps=10, ...) {
@@ -56,7 +96,14 @@ create.graphics.window <- function(parent, title='', dpi=80, ps=10, ...) {
 	return(g)
 }
 
-
+create.script.widget <- function(script, parent, package) {
+	script.widget <- gwindow(paste(package, 'commands'), parent=parent, visible=FALSE, width=600, height=150)
+	set.widget.bgcolor(script.widget, "white")
+	gtext(script, container=script.widget)
+	addHandlerFocus(script.widget, handler=function(h, ...) focus(h$obj) <- TRUE)
+	visible(script.widget) <- TRUE
+	focus(script.widget) <- TRUE
+}
 
 saveGraph <- function(h, ...){
 	e <- h$action$env
@@ -175,6 +222,7 @@ has.required.arguments <- function(par.names, env) {
 }
 
 makeDFView <- function(df, container, f=NULL, ...) {
+	# from John Verzani
 	model <- rGtkDataFrame(df)
 	view <- gtkTreeView(model)
 	## Michael Lawrence's trick
