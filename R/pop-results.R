@@ -53,7 +53,7 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 				handler=selectAgeMenuPop,
 				action=list(mw=main.win, env=e, multiple=TRUE, label.widget.name='age.label'))
 	e$age <- 'all'
-	lo[1,7] <- e$age.label <- glabel('', container=lo)
+	lo[1,7, anchor=leftcenter] <- e$age.label <- glabel('', container=lo)
 	addSpace(g, 10)
 	graph.f <- gframe("<span color='blue'>Advanced graph parameters</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
@@ -74,7 +74,7 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=show.e0.traj, 
 						action=list(mw=main.win, env=e, type='plot', script=FALSE,
 											pred.type='pop', package='bayesPop'))
-	e$TableB.show.traj <- gbutton(action=TableB.show.traj.act, container=button.g)
+	e$TableB.show.traj <- bDem.gbutton(action=TableB.show.traj.act, container=button.g)
 	bDem.gbutton(action=GraphB.show.traj.act, container=button.g)
 	enabled(e$TableB.show.traj) <- svalue(e$sum.over.ages)
 	return(e)
@@ -114,6 +114,7 @@ get.pop.table.title <- function(country, pred)
 	return (country)
 
 pop.show.pyramid.group <- function(g, main.win, parent.env) {
+	leftcenter <- c(-1, 0)
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'pop'
@@ -125,68 +126,44 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	defaults.pyr.all <- formals(pop.pyramidAll)
 	defaults.traj.pyr <- formals(bayesPop:::pop.trajectories.pyramid.bayesPop.prediction)
 		
+	addSpace(g, 10)
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
 	e$show.pyr.country <- create.country.widget(country.f, defaults.pyr.all, 
 									main.win, prediction=TRUE, parent.env=e, disable.table.button=FALSE)
-		
-	type.settings.f <- gframe("<span color='blue'>Type &amp; Time settings</span>", markup=TRUE, 
+	addSpace(g, 10)
+	type.settings.f <- gframe("<span color='blue'>Pyramid settings</span>", markup=TRUE, 
 								horizontal=FALSE, container=g)
-	type.g1 <- ggroup(horizontal=TRUE, container=type.settings.f)
-	e$is.traj.pyr <- gcheckbox("Trajectory pyramid", container=type.g1, checked=FALSE,
+	type.g1 <- glayout(horizontal=TRUE, container=type.settings.f)
+	type.g1[1,1, anchor=leftcenter] <- glabel('CI (%):', container=type.g1)
+	type.g1[1,2] <- e$pi <- gedit('80, 95', width=7, container=type.g1)
+	type.g1[2,1:2] <- e$is.traj.pyr <- gcheckbox("Trajectory pyramid", container=type.g1, checked=FALSE,
 						handler=function(h,...) enabled(e$nr.traj) <- svalue(h$obj))
-	addSpace(type.g1, 10)
-	e$proportion <- gcheckbox("Show x-axis as proportion", container=type.g1, checked=defaults.pyr$proportion)
-	addSpace(type.g1, 10)
-	glabel('Highest age category:', container=type.g1)
-	e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, container=type.g1)
-	
-	type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
-	year.gb <- gbutton(" Years ", container=type.g2,
+	type.g1[3,1:2] <- e$proportion <- gcheckbox("x-axis as proportion", container=type.g1, checked=defaults.pyr$proportion)
+	type.g1[2,3, anchor=leftcenter] <- glabel('# trajectories:', container=type.g1)
+	type.g1[2,4] <- e$nr.traj <- gedit(20, width=5, container=type.g1)
+	type.g1[3,3, anchor=leftcenter] <- glabel('Highest age category:', container=type.g1)
+	type.g1[3,4] <- e$age <- gedit(defaults.pyr$age[length(defaults.pyr$age)], width=3, container=type.g1)
+	type.g1[2,5] <- year.gb <- bDem.gbutton(" Years ", container=type.g1,
 				handler=selectYearsMenuPop,
 				action=list(mw=main.win, env=e, widget='year', multiple=TRUE))
-	glabel(":", container=type.g2)
-	#e$year <- glabel(paste(defaults.pred$present.year, "        "), container=type.settings.f)
-	e$year <- gedit(defaults.pred$present.year, width=10, container=type.g2)	
-	addSpace(type.g2, 10)
-	#glabel("Comparison year:", container=type.g2)
-	#past.year.gb <- gdroplist(c('None', 'present', seq(from=2003, to=1948, by=-5)), container=type.g2,
-	#					handler=function(h,...){
-	#						val <- svalue(h$obj)
-	#						h$action$env$draw.past.year <- if(val=='None') FALSE else {if(val=='present') TRUE else val}
-	#					}, action=list(env=e))
-	year.comp.gb <- gbutton(" Additional Years ", container=type.g2,
+	type.g1[2,6] <- e$year <- gedit(defaults.pred$present.year, width=10, container=type.g1)	
+	type.g1[3,5] <- year.comp.gb <- bDem.gbutton(" Additional years ", container=type.g1,
 				handler=selectYearsMenuPop,
 				action=list(mw=main.win, env=e, widget='year.comp', multiple=TRUE))
-	glabel(":", container=type.g2)
-	e$year.comp <- gedit('', width=10, container=type.g2)
-	#e$draw.past.year <- FALSE
-
-
-	#type.g2 <- ggroup(horizontal=TRUE, container=type.settings.f)
-	#e$proportion <- gcheckbox("Show as proportion", container=type.g2, checked=TRUE)
-						
-	traj.settings.f <- gframe("<span color='blue'>Uncertainty settings</span>", markup=TRUE, 
-								horizontal=TRUE, container=g)
-	glabel('CI (%):', container=traj.settings.f)
-	e$pi <- gedit('80, 95', width=7, container=traj.settings.f)
-
-	addSpace(traj.settings.f, 10)
-	glabel('# trajectories:', container=traj.settings.f)
-	e$nr.traj <- gedit(20, width=5, container=traj.settings.f)
+	type.g1[3,6] <- e$year.comp <- gedit('', width=10, container=type.g1)
 	enabled(e$nr.traj) <- svalue(e$is.traj.pyr)
 	addSpring(g)
 	button.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='pop.pyramid', package='bayesPop', parent.group=button.g,
 						parent.window=main.win)
 	addSpring(button.g)
-	
-	gbutton('Generate Script', container=button.g, handler=show.pop.pyramid, 
-								action=list(mw=main.win, env=e, script=TRUE))
+	create.generate.script.button(handler=show.pop.pyramid, 
+							action=list(mw=main.win, env=e, script=TRUE), container=button.g)
 	addSpace(button.g, 5)
 	GraphB.show.pyr.act <- gaction(label='Graph', icon='lines', handler=show.pop.pyramid, 
 						action=list(mw=main.win, env=e, script=FALSE))
-	gbutton(action=GraphB.show.pyr.act, container=button.g)
+	bDem.gbutton(action=GraphB.show.pyr.act, container=button.g)
 	return(e)
 }
 
@@ -276,8 +253,9 @@ selectAgeMenuPop <- function(h, ...) {
 		age <- svalue(h$action$env$age.gt)
 		h$action$env$age <- if (is.element(0, age)) 'all' else age 
 		visible(h$action$env$age.sel.win) <- FALSE
-		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) {
-			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(h$action$env$age, collapse=',')
+		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) 
+			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(bayesPop:::get.age.labels(h$action$env$age, collapse=TRUE, age.is.index=TRUE), 
+																		collapse=',')
 	}
 	if (!is.null(h$action$env$age.sel.win)) 
 		visible(h$action$env$age.sel.win) <- TRUE

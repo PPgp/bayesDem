@@ -4,24 +4,25 @@ guiToolkit.default <- 'RGtk2'
 tfr.wpp.year.default <- 2010
 e0.wpp.year.default <- 2010
 pop.wpp.year.default <- 2010
+
 color.main <- "blanchedalmond"
 color.button <- "bisque1"
 color.nb.inactive <- "beige"
 
-color.main <- "#4B92DB"
-color.button <- "dodgerblue"
-color.nb.inactive <- "steelblue1"
+# color.main <- "#4B92DB"
+# color.button <- "dodgerblue"
+# color.nb.inactive <- "steelblue1"
 
-color.main <- "lightskyblue1"
-color.button <- "lightskyblue2"
-color.nb.inactive <- "lightblue1"
+# color.main <- "lightskyblue1"
+# color.button <- "lightskyblue2"
+# color.nb.inactive <- "lightblue1"
 
-color.main <- "aliceblue"
-color.button <- "azure2"
-color.nb.inactive <- "azure1"
+# color.main <- "aliceblue"
+# color.button <- "azure2"
+# color.nb.inactive <- "azure1"
 
-color.main <- "grey91"
-color.button <- "grey91"
-color.nb.inactive <- "grey91"
+# color.main <- "grey91"
+# color.button <- "grey91"
+# color.nb.inactive <- "grey91"
 
 

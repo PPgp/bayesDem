@@ -13,13 +13,14 @@ popNewPred.group <- function(g, main.win, parent) {
 	pred.g1[2,1, anchor=leftcenter] <- glabel("Start year:", container=pred.g1)
 	pred.g1[2,2] <- e$start.year <- gedit(defaults$start.year, width=4, container=pred.g1)
 	pred.g1[2,3, anchor=leftcenter] <- glabel("Present year:", container=pred.g1)
-	pred.g1[1,4] <- e$present.year <- gedit(defaults$present.year, width=4, container=pred.g1)
-	pred.g1[1,5, anchor=leftcenter] <- glabel("Nr. trajectories:", container=pred.g1)
-	pred.g1[1,6] <- e$nr.traj <- gedit(defaults$nr.traj, width=5, container=pred.g1)
+	pred.g1[2,4] <- e$present.year <- gedit(defaults$present.year, width=4, container=pred.g1)
+	pred.g1[1,5] <- '    '
+	pred.g1[1,6, anchor=leftcenter] <- glabel("Nr. trajectories:", container=pred.g1)
+	pred.g1[1,7] <- e$nr.traj <- gedit(defaults$nr.traj, width=5, container=pred.g1)
 
 	#e$replace.output <- gcheckbox("Overwrite existing prediction", 
 	#								checked=defaults$replace.output, container=pred.g2)
-	pred.g1[2,5:6] <- e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=pred.g1)
+	pred.g1[2,6:7] <- e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=pred.g1)
 	
 	addSpace(g, 10)
 	countries.g <- gframe("<span color='blue'>Countries selection</span>", markup=TRUE, 
@@ -33,7 +34,6 @@ popNewPred.group <- function(g, main.win, parent) {
 	countries.g1[1,2] <- countries.gb <- bDem.gbutton("  Select countries  ", container=countries.g1,
 				handler=selectCountryMenuPop,
 				action=list(mw=main.win, env=e, multiple=TRUE, wpp.year=parent$wpp.year, label.widget.name='country.label'))
-	addSpace(countries.g1, 10)
 	countries.g1[2,1] <- e$all.remaining.countries <- gcheckbox("All countries without prediction", 
 									checked=FALSE, container=countries.g1,
 									handler=function(h,...){
@@ -101,7 +101,7 @@ run.pop.prediction <- function(h, ...) {
 		else params$countries <- e$selected.countries
 	}
 	simdir <- get.parameters(list(text='output.dir'), e, quote=FALSE)$output.dir # to avoid double quoting if script is TRUE
-	if(has.pop.prediction(output.dir=simdir)) {
+	if(has.pop.prediction(sim.dir=simdir)) {
 		params[['replace.output']] <- FALSE
 		if (gconfirm(paste('Prediction for', simdir, 
 								'already exists.\nDo you want to overwrite existing results?'),
