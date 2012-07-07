@@ -19,7 +19,7 @@ e0mcmc.all.countries.group <- function(g, main.win, parent) {
 	time.g <- gframe("<span color='blue'>e0 time series</span>", markup=TRUE, horizontal=FALSE, container=g, expand=FALSE)
 	timelo <- glayout(container=time.g)
 	timelo[1,1, anchor=c(-1,0)] <- glabel("Sex:", container=timelo)
-	timelo[1,2] <- e$sex <- gdroplist(c('Female', 'Male'), container=timelo, selected=1)
+	timelo[1,2] <- e$sex <- bDem.gdroplist(c('Female', 'Male'), container=timelo, selected=1)
 	timelo[1,3, anchor=c(-1,0)] <- glabel("Start year:", container=timelo)
 	timelo[1,4] <- e$start.year <- gedit(defaults$start.year, width=4, container=timelo)
 	timelo[1,5, anchor=c(-1,0)] <- glabel("Present year:", container=timelo)
@@ -107,13 +107,6 @@ e0mcmc.run <- function(h, ...) {
 			}
 		create.script.widget(commands, h$action$mw, package="bayesLife")
 	} else {
-		if(!params[['replace.output']] && file.exists(params[['output.dir']])) {
-			if(length(list.files(params[['output.dir']])) > 0) {
-				gmessage(paste('Non-empty directory', params[['output.dir']], 
-								'already exists.\nCheck "Overwrite existing results" to delete its content.'))
-				return()
-			}
-		}
 		run <- FALSE
 		if ((params[['iter']] == 'auto' && ((!is.null(params[['auto.conf']]) 
 				&& params[['auto.conf']]$iter > 5000) || is.null(params[['auto.conf']]))) 
@@ -345,7 +338,7 @@ e0mcmc.advance.settings <- function(h, ...) {
 		}
 		visible(h$action$env$adv.set.win) <- TRUE
 	} else { # create the Advanced Parameters window
-		h$action$env$adv.set.win <- adv.set.win <- gwindow('Settings for Bayesian Hierarchical Model of Life Expectancy',
+		h$action$env$adv.set.win <- adv.set.win <- bDem.gwindow('Settings for Bayesian Hierarchical Model of Life Expectancy',
 						parent=h$action$mw, visible=FALSE,
 						handler=function(h, ...) {
 							h$action$env$adv.set.okhandler <- NULL
@@ -589,12 +582,12 @@ e0mcmc.advance.settings <- function(h, ...) {
 	
 	# Buttons
 	button.g <- ggroup(container=e$adv.g, horizontal=TRUE)
-	gbutton('Cancel', container=button.g, handler=function(h, ...) 
+	bDem.gbutton('Cancel', container=button.g, handler=function(h, ...) 
 					visible(adv.set.win) <- FALSE)
 	addSpring(button.g)
-	e$adv.set.defaultbutton <- gbutton(action=gaction('  Set to Default Values  ', icon='refresh', handler=set.defaults),
+	e$adv.set.defaultbutton <- bDem.gbutton(action=gaction('  Set to Default Values  ', icon='refresh', handler=set.defaults),
 										container=button.g)
-	e$adv.set.okbutton <- gbutton('OK', container=button.g)
+	e$adv.set.okbutton <- bDem.gbutton('OK', container=button.g)
 	
 	e$linked.pars.list <- linked.pars.list
 	e$linked.pars.tuple <- linked.pars.tuple

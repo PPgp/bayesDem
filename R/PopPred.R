@@ -10,12 +10,12 @@ popPredTab <- function(pop.w, main.win, wpp.year) {
 	nb <- bDem.gnotebook(container=pop.w, expand=TRUE)
 	
 	# Predictions group
-	pred.g <- ggroup(label="<span color='#B40404'>Make predictions</span>", markup=TRUE,
+	pred.g <- ggroup(label="  <span color='#B40404'>Make predictions</span>  ", markup=TRUE,
 							horizontal=FALSE, container=nb, spacing=10)
 	pred.g.env <- popNewPred.group(pred.g, main.win, parent=ePopPred)
 	
 	# Result group
-	result.g <- ggroup(label="<span color='#B40404'>Explore results</span>", markup=TRUE,
+	result.g <- ggroup(label="  <span color='#B40404'>Explore results</span>  ", markup=TRUE,
 							horizontal=FALSE, container=nb)
 	result.g.env <- popResults.group(result.g, main.win, parent=ePopPred)
 	

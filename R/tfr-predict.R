@@ -61,21 +61,21 @@ tfr.pred.all.countries.group <- function(g, main.win, parent) {
 	plo[1,4, anchor=leftcenter] <- 	glabel("Burnin:", container=plo)
 	#glabel("<span color='red'>*</span>", markup=TRUE, container=pred.g2)
 	plo[1,5] <- e$burnin <- gedit(defaults$burnin, width=7, container=plo)
-	plo[1,6] <- e$use.diagnostics <- gcheckbox("Use diagnostics", checked = defaults$use.diagnostics, 
-									handler=function(h, ...) enable.pred.settings(!svalue(h$obj)), 
-									container=plo)
-	#addSpace(pred.g1, 20)
 	plo[2,1, anchor=leftcenter] <- glabel("Nr. trajectories:", container=plo)
 	plo[2,2] <- e$nr.traj <- gedit(defaults$nr.traj, width=5, container=plo)
 	plo[2,3, anchor=leftcenter] <- 'OR'
 	plo[2,4, anchor=leftcenter] <- glabel("Thin:", container=plo)
 	plo[2,5] <- e$thin <- gedit(defaults$thin, width=5, container=plo)
-	plo[2,6] <- e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=plo)
 	plo[3,1, anchor=leftcenter] <- glabel("Nr. ascii trajectories:", container=plo)
 	plo[3,2] <- e$save.as.ascii <- gedit(defaults$save.as.ascii, width=5, container=plo)
 	plo[3,4, anchor=leftcenter] <- glabel("RNG seed:", container=plo)
 	plo[3,5] <- e$seed <- gedit(defaults$seed, width=4, container=plo)
+	plo[2,6] <- e$use.diagnostics <- gcheckbox("Use diagnostics", checked = defaults$use.diagnostics, 
+									handler=function(h, ...) enable.pred.settings(!svalue(h$obj)), 
+									container=plo)
+	plo[3,6] <- e$verbose <- gcheckbox("Verbose", checked=defaults$verbose, container=plo)
 	enable.pred.settings(!defaults$use.diagnostics)
+	return(plo)
 }
 
 run.tfr.prediction <- function(h, ...)
@@ -122,7 +122,7 @@ run.tfr.prediction <- function(h, ...)
 				return()
 			}
 		}
-		.run.prediction(e, handler=get.tfr.prediction.status, option='bDem.TFRpred', 
+		.run.prediction(e, type='TFR', handler=get.tfr.prediction.status, option='bDem.TFRpred', 
 								call='tfr.predict', params=params, 
 								sim.name='TFR prediction', main.win=h$action$mw,
 								action=list(sb=e$statuslabel),
@@ -131,26 +131,25 @@ run.tfr.prediction <- function(h, ...)
 }
 
 .run.prediction <- function(type='TFR', ...) {
-	totopt <- paste('bDem.', type, '.ncountries.total', sep='')
-	doneopt <- paste('bDem.', type, '.ncountries.done', sep='')
+	statusopt <- paste('bDem.', type, 'pred.status', sep='')
 	opt <- list()
-	opt[[totopt]] <- NULL
-	opt[[doneopt]] <- NULL
+	opt[statusopt] <- list(NULL)
 	options(opt)
 	res <- .run.simulation(...)
 	options(opt)
 	return(res)
 }
-
-get.tfr.prediction.status <- function(h, ...) {
-	sb <- h$action$sb
-	ncountries <- getOption('bDem.TFRpred.ncountries.total', default=-1)
-	ncountries.done <- getOption('bDem.TFRpred.ncountries.done', default=0)
-	status <- 'Running TFR prediction ...'
-	if(ncountries >= 0)
-		status <- paste(status, ncountries.done, ' countries finished out of', ncountries, 'countries.')
+.update.status <- function(sb, status.option, prefix) {
+	predstatus <- getOption(status.option, default=NULL)
+	status <- prefix
+	if(!is.null(predstatus))
+		status <- paste(status, predstatus)
 	svalue(sb) <- status
 }
+
+get.tfr.prediction.status <- function(h, ...) 
+	.update.status(h$action$sb, 'bDem.TFRpred.status', 'Running TFR prediction ...')
+
 
 .create.extra.countries.group <- function(g, e, defaults) {
 	addSpace(g, 10)
@@ -165,7 +164,7 @@ get.tfr.prediction.status <- function(h, ...) {
 	countries.g1[1,3] <- e$e.countries.gb <- bDem.gbutton("  Select specific countries/regions  ", container=countries.g1,
 				handler=selectCountryMenuPred,
 				action=list(mw=main.win, env=e, not.predicted=TRUE, multiple=TRUE, sorted=FALSE, 
-							label.widget.name='extra.pred.country.label'))
+							type=e$pred.type, label.widget.name='extra.pred.country.label'))
 	enabled(e$e.countries.gb) <- !svalue(e$all.countries)
 	countries.g1[2,3, anchor=c(-1,0)] <- e$extra.pred.country.label <- glabel('', container=countries.g1)
 	addSpace(g, 10)
@@ -183,6 +182,7 @@ tfr.pred.extra.countries.group <- function(g, main.win, parent) {
 	e <- new.env()
 	defaults <- formals(tfr.predict.extra) # default argument values
 	e$sim.dir <- parent$sim.dir
+	e$pred.type <- 'tfr'
 	.create.extra.countries.group(g, e, defaults)
 	addSpring(g)
 	predict.g <- ggroup(horizontal=TRUE, container=g)
@@ -213,7 +213,7 @@ run.tfr.prediction.extra <- function(h, ...)
 											 ')',sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesTFR")
 	} else {
-		.run.simulation(e, handler=get.tfr.prediction.status, option='bDem.TFRpred', 
+		.run.prediction(e, type='TFR', handler=get.tfr.prediction.status, option='bDem.TFRpred', 
 								call='tfr.predict.extra', params=params, 
 								sim.name='TFR extra prediction', main.win=h$action$mw,
 								interval=1000)

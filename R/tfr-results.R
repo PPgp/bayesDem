@@ -54,10 +54,14 @@ TFRresults.group <- function(g, main.win, parent) {
 }
 #################################################################################
 
-create.trajectories.group <- function(g, e, main.win) {
+create.trajectories.group <- function(g, parent.env, main.win) {
 	############################################
 	# TFR Trajectories
 	############################################
+	e <- new.env()
+	e$sim.dir <- parent.env$sim.dir
+	e$pred.type <- 'tfr'
+
 	defaults.pred <- formals(tfr.predict)
 	defaults.traj <- formals(tfr.trajectories.plot)
 	defaults.traj.all <- formals(tfr.trajectories.plot.all)
@@ -77,24 +81,27 @@ create.trajectories.group <- function(g, e, main.win) {
 	
 	show.traj.graph.f <- gframe("<span color='blue'>Advanced graph parameters</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
-	e$traj.graph.pars <- create.graph.pars.widgets(show.traj.graph.f, main.win=main.win)
+	e$graph.pars <- create.graph.pars.widgets(show.traj.graph.f, main.win=main.win)
 	addSpring(g)
 	show.traj.bg <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='tfr.trajectories.plot', package='bayesTFR', parent.group=show.traj.bg,
 						parent.window=main.win)
 	addSpring(show.traj.bg)
-	create.generate.script.button(handler=showTFRtraj, action=list(mw=main.win, env=e, type='plot', script=TRUE),
+	create.generate.script.button(handler=show.e0.traj, action=list(mw=main.win, env=e, type='plot', 
+									script=TRUE, pred.type='tfr', package='bayesTFR'),
 								container=show.traj.bg)
 	addSpace(show.traj.bg, 5)
-	TableB.show.traj.act <- gaction(label='Table', icon='dataframe', handler=showTFRtraj, 
-						action=list(mw=main.win, env=e, type='table', script=FALSE))
-	GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=showTFRtraj, 
-						action=list(mw=main.win, env=e, type='plot', script=FALSE))
+	TableB.show.traj.act <- gaction(label='Table', icon='dataframe', handler=show.e0.traj, 
+						action=list(mw=main.win, env=e, type='table', script=FALSE, pred.type='tfr', package='bayesTFR'))
+	#GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=showTFRtraj, 
+	#					action=list(mw=main.win, env=e, type='plot', script=FALSE))
+	GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=show.e0.traj, 
+						action=list(mw=main.win, env=e, type='plot', script=FALSE, pred.type='tfr', package='bayesTFR'))
 	e$TableB.show.traj <- bDem.gbutton(action=TableB.show.traj.act, container=show.traj.bg)
 	bDem.gbutton(action=GraphB.show.traj.act, container=show.traj.bg)
 }
 
-.create.map.settings.group <- function(g, e) {
+.create.map.settings.group <- function(g, e, measures=c('TFR', 'lambda', bayesTFR:::tfr.parameter.names.cs.extended())) {
 	leftcenter <- c(-1,0)
 	map.set.f <- gframe("<span color='blue'>Map settings</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
@@ -105,14 +112,14 @@ create.trajectories.group <- function(g, e, main.win) {
 						'lower 50'=0.25, 'upper 50'=0.75, 'lower 40'=0.3, 'upper 40'=0.7, 
 						'lower 20'=0.4, 'upper 20'=0.6
 						)
-	mlo[1,2] <- e$map.percentile <- gdroplist(names(e$percentiles), container=mlo)
+	mlo[1,2] <- e$map.percentile <- bDem.gdroplist(names(e$percentiles), container=mlo)
 	mlo[1,3] <- '    ' # add some space between the two groups
 	mlo[2,1, anchor = leftcenter] <- glabel('Bounds:    ', container=mlo)
 	mlo[2,2] <- bounds.g <- ggroup(horizontal=TRUE, container=mlo)
-	e$map.bounds <- gdroplist(c(80, 90, 95, 60, 50, 40, 20), container=bounds.g)
+	e$map.bounds <- bDem.gdroplist(c(80, 90, 95, 60, 50, 40, 20), container=bounds.g)
 	glabel('%', container=bounds.g)	
 	mlo[3,1, anchor = leftcenter] <- glabel('Measure:', container=mlo)
-	mlo[3,2] <- e$map.measure <- gdroplist(c('TFR', 'lambda', bayesTFR:::tfr.parameter.names.cs.extended()), container=mlo)	
+	mlo[3,2] <- e$map.measure <- bDem.gdroplist(measures, container=mlo)	
 	mlo[1,4, anchor = leftcenter] <- glabel('Use R package:', container=mlo)
 	mlo[1:2,5] <- e$map.package <- gradio(c('rworldmap', 'googleVis'), horizontal = FALSE, 
 						handler=function(h, ...) {
@@ -146,7 +153,10 @@ create.maps.group <- function(g, e, main.win) {
 					handler=function(h,...) enabled(e$map.same.scale) <- svalue(h$obj) == 'TFR')
 }
 
-create.dlcurves.group <- function(g, e, main.win) {
+create.dlcurves.group <- function(g, parent.env, main.win) {
+	e <- new.env()
+	e$sim.dir <- parent.env$sim.dir
+	e$pred.type <- 'tfr'
 	leftcenter <- c(-1,0)
 	############################################
 	# DL Curves
@@ -157,26 +167,26 @@ create.dlcurves.group <- function(g, e, main.win) {
 	dlc.country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
 	e$dlc.country <- create.country.widget(dlc.country.f, defaults.dl.all, main.win, prediction=FALSE, 
-											parent.env=e)
+											parent.env=e, disable.table.button=FALSE)
 	addSpace(g, 10)
 	dlc.dl.f <- gframe("<span color='blue'>DL curve settings</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
 	dllo <- glayout(horizontal=TRUE, container=dlc.dl.f)
 	dllo[1,1, anchor=leftcenter] <- glabel('CI (%):', container=dllo)
-	dllo[1,2] <- e$dlc.ci <- gedit('80, 95', width=7, container=dllo)
+	dllo[1,2] <- e$pi <- gedit('80, 95', width=7, container=dllo)
 	dllo[1,3, anchor=leftcenter] <- glabel('Burnin:', container=dllo)
-	dllo[1,4] <- e$dlc.bi <- gedit(defaults.dl$burnin, width=5, container=dllo)
+	dllo[1,4] <- e$burnin <- gedit(defaults.dl$burnin, width=5, container=dllo)
 	dllo[2,3, anchor=leftcenter] <- glabel('Maximum TFR:', container=dllo)
-	dllo[2,4] <- e$dlc.tfr.max <- gedit(defaults.dl$tfr.max, width=2, container=dllo)
+	dllo[2,4] <- e$tfr.max <- gedit(defaults.dl$tfr.max, width=2, container=dllo)
 	dllo[2,1, anchor=leftcenter] <- glabel('# curves:', container=dllo)
-	dllo[2,2] <- e$dlc.nr.curves <- gedit(20, width=6, container=dllo)
+	dllo[2,2] <- e$nr.curves <- gedit(20, width=6, container=dllo)
 	
 	dllo[1,5] <- e$predictive.distr <- gcheckbox('Predictive distribution', 
 							checked=defaults.dl$predictive.distr, container=dllo)
 	addSpace(g, 10)			
 	dlc.graph.f <- gframe("<span color='blue'>Advanced graph parameters</span>", markup=TRUE, 
 						horizontal=FALSE, container=g)
-	e$dlc.graph.pars <- create.graph.pars.widgets(dlc.graph.f, main.win=main.win)
+	e$graph.pars <- create.graph.pars.widgets(dlc.graph.f, main.win=main.win)
 	addSpring(g)
 	dlc.bg <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='DLcurve.plot', package='bayesTFR', parent.group=dlc.bg,
@@ -197,51 +207,54 @@ create.dlcurves.group <- function(g, e, main.win) {
 							horizontal=FALSE, container=g)
 	tlo <- glayout(container=f)
 	tlo[1,1, anchor=leftcenter] <- glabel('Parameters:', container=tlo)
-	tlo[1,2] <- e$traces.pars.chb <- gcheckbox("all", container=tlo, checked=TRUE, 
+	tlo[1,2] <- e$pars.chb <- gcheckbox("all", container=tlo, checked=TRUE, 
 							handler=function(h,...) {
-								if(svalue(e$traces.cs.chb, index=TRUE)==2) {
-									enabled(e$traces.par.cs.dl)<-!svalue(h$obj)
-									enabled(e$traces.par.dl)<-FALSE
+								if(svalue(e$cs.chb, index=TRUE)==2) {
+									enabled(e$par.cs.dl)<-!svalue(h$obj)
+									enabled(e$par.dl)<-FALSE
 								} else {
-									enabled(e$traces.par.dl)<-!svalue(h$obj)
-									enabled(e$traces.par.cs.dl)<-FALSE
+									enabled(e$par.dl)<-!svalue(h$obj)
+									enabled(e$par.cs.dl)<-FALSE
 									}})
-	tlo[2:3,1:2] <- e$traces.cs.chb <- gradio(c('World parameters', 'Country specific'), horizontal = FALSE,
+	tlo[2:3,1:2] <- e$cs.chb <- gradio(c('World parameters', 'Country specific'), horizontal = FALSE,
 						container=tlo, 
 						handler=function(h,...) {
 								if (svalue(h$obj, index=TRUE)==2) {
-									enabled(e$traces.par.cs.dl)<-!svalue(e$traces.pars.chb)
-									enabled(e$traces.par.dl)<-FALSE
+									enabled(e$par.cs.dl)<-!svalue(e$pars.chb)
+									enabled(e$par.dl)<-FALSE
 								} else {
-									enabled(e$traces.par.dl)<-!svalue(e$traces.pars.chb)
-									enabled(e$traces.par.cs.dl)<-FALSE
+									enabled(e$par.dl)<-!svalue(e$pars.chb)
+									enabled(e$par.cs.dl)<-FALSE
 									}
-								enabled(e$traces.country$country.w) <- svalue(h$obj, index=TRUE)==2
-								enabled(e$traces.country$country.select.b) <- svalue(h$obj, index=TRUE)==2
+								enabled(e$country$country.w) <- svalue(h$obj, index=TRUE)==2
+								enabled(e$country$country.select.b) <- svalue(h$obj, index=TRUE)==2
 								}
 							)
-	tlo[2,3:4] <- e$traces.par.dl <- gdroplist(par.names, container=tlo)
-	enabled(e$traces.par.dl) <- FALSE
-	tlo[3,3:4] <- e$traces.par.cs.dl <- gdroplist(par.names.cs, container=tlo)
-	enabled(e$traces.par.cs.dl) <- FALSE
+	tlo[2,3:4] <- e$par.dl <- bDem.gdroplist(par.names, container=tlo)
+	enabled(e$par.dl) <- FALSE
+	tlo[3,3:4] <- e$par.cs.dl <- bDem.gdroplist(par.names.cs, container=tlo)
+	enabled(e$par.cs.dl) <- FALSE
 	tlo[4,1:4] <- cw <- ggroup(horizontal=TRUE, container=tlo)
-	e$traces.country <- create.country.widget(cw,  main.win=main.win, show.all=FALSE, prediction=FALSE, 
+	e$country <- create.country.widget(cw,  main.win=main.win, show.all=FALSE, prediction=FALSE, 
 											parent.env=e)
-	enabled(e$traces.country$country.w) <- svalue(e$traces.cs.chb, index=TRUE)==2
-	enabled(e$traces.country$country.select.b) <- svalue(e$traces.cs.chb, index=TRUE)==2
+	enabled(e$country$country.w) <- svalue(e$cs.chb, index=TRUE)==2
+	enabled(e$country$country.select.b) <- svalue(e$cs.chb, index=TRUE)==2
 	tlo[1,5] <- '    '
 	tlo[2,6, anchor=leftcenter] <- glabel('# points:', container=tlo)
-	tlo[2,7] <- e$traces.nr.points <- gedit(100, width=5, container=tlo, coerce.with=as.numeric)
+	tlo[2,7] <- e$nr.points <- gedit(100, width=5, container=tlo)
 	tlo[3,6, anchor=leftcenter] <- glabel("Burnin:", container=tlo)
-	tlo[3,7] <- e$traces.burnin <- gedit(0, width=5, container=tlo, coerce.with=as.numeric)
+	tlo[3,7] <- e$burnin <- gedit(0, width=5, container=tlo)
 	tlo[4,6, anchor=leftcenter] <- glabel("Thin:", container=tlo)
-	tlo[4,7] <- e$traces.thin <- gedit(0, width=5, container=tlo, coerce.with=as.numeric)
+	tlo[4,7] <- e$thin <- gedit(1, width=5, container=tlo)
 }
 
-create.partraces.group <- function(g, e, main.win) {
+create.partraces.group <- function(g, parent.env, main.win) {
 	############################################
 	# Parameter Traces
 	############################################
+	e <- new.env()
+	e$sim.dir <- parent.env$sim.dir
+	e$pred.type <- 'tfr'
 	.create.partraces.settings.group(g, e, par.names=tfr.parameter.names(), par.names.cs=tfr.parameter.names.cs())
 	addSpring(g)
 	traces.bg <- ggroup(horizontal=TRUE, container=g)
@@ -285,9 +298,10 @@ create.convergence.tab <- function(parent, sim.dir, type='tfr', package='bayesTF
 	g[2, 1] <- '  '
 	g[3,1] <- bDem.gbutton('    Show available convergence diagnostics    ', container=g, handler=showConvergenceDiag,
 					action=list(mw=main.win, env=e, type=type), fill=TRUE)
-	
 	# This line is commented out because (for some reason) on Windows OS it causes the main window to go out of whack.
 	#glo[l,2] <- (e$country.sampling.prop <- gslider(from=0, to=1, by=1/200, value=1, container=g4))
+	addSpace(parent, 10)
+	.create.status.label(parent, e)
 	enabled(e$country.sampling.prop) <- !defaults$express
 	
 	addSpring(parent)
@@ -332,7 +346,7 @@ create.country.widget <- function(parent, defaults=NULL, main.win=NULL, show.all
 										})
 		#addSpace(g2, 15)
 		g1[3,2, anchor=rightcenter] <- glabel("Output type:", container=g1)
-		g1[3,3] <- e$all.type <- gdroplist(c('png', 'jpeg', 'pdf', 'tiff', 'bmp', 'postscript'), container=g1)
+		g1[3,3] <- e$all.type <- bDem.gdroplist(c('png', 'jpeg', 'pdf', 'tiff', 'bmp', 'postscript'), container=g1)
 		enabled(e$all.type) <- FALSE
 		#g3 <- ggroup(horizontal=TRUE, container=parent)
 		#addSpace(g3,7)
@@ -497,87 +511,23 @@ get.country.code.from.widget <- function(country.widget, env, force.country.spec
 	return(list(code=NULL, output.dir=svalue(env$all.output), output.type=svalue(env$all.type)))
 }
 	
-showTFRtraj <- function(h, ...) {
-	e <- h$action$env
-	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
-	show.type <- h$action$type
-	country.pars <- get.country.code.from.widget(e$show.traj.country$country.w, e$show.traj.country, 
-							force.country.spec=show.type!='plot')
-	if(is.null(country.pars)) return(NULL)
-	param.names1 <- list(text='sim.dir', numeric=c('nr.traj', 'start.year', 'end.year'),
-							logical=c('half.child.variant', 'typical.trajectory'))
-	param.env <- get.parameters(param.names1, env=e, quote=h$action$script)
-	param.env[['pi']] <- svalue(e$pi) # because this is a vector and we want to keep this as a string for later parsing
-	param.env.rest <- list(country=country.pars$code, output.dir=country.pars$output.dir,
-							output.type=country.pars$output.type, verbose=TRUE)
-	param.env <- c(param.env, 
-					get.parameters(list(text=c('output.dir', 'output.type'), 
-										logical='verbose', numeric='country'), env=param.env.rest, 
-										quote=h$action$script, retrieve.from.widgets=FALSE))
-	param.pred <- param.env['sim.dir']
-	# get it now unquoted (to avoid double quotes if script is TRUE)
-	param.pred.ev <- get.parameters(list(text='sim.dir'), env=e, quote=FALSE)
-	pred <- do.call('get.tfr.prediction', param.pred.ev)
-	if(h$action$script) {
-		cmd <- paste('pred <- get.tfr.prediction(', paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 
-						')\n', sep='')
-	} else {	
-		cmd <- ''
-	}
-	xmin <- param.env[['start.year']]
-	xmax <- param.env[['end.year']]
-	if(nchar(xmin) > 0 | nchar(xmax) > 0) {
-		param.env[['xlim']] <- paste(if(nchar(xmin)>0) xmin else pred$mcmc.set$meta$start.year,
-									 if(nchar(xmax)>0) xmax else pred$end.year, sep=', ')	}
-	param.names.graph <- list(numvector=c('pi', 'xlim'), numeric=c('country', 'nr.traj'), 
-							logical=c('half.child.variant', 'typical.trajectory'))
-	param.names.table <- list(numvector='pi', numeric='country', logical='half.child.variant')
+get.additional.tfr.param <- function(e, ...) {
+	hchv <- svalue(e$half.child.variant)
+	return(list(add=list(half.child.variant=hchv), 
+				plot=c('pi', 'xlim', 'nr.traj', 'half.child.variant', 'typical.trajectory'), 
+				table=c('pi', 'country'), table.decimal=2))
+}
+	
+assemble.tfr.plot.cmd <- function(param, e, all=FALSE) {
+	all.suffix <- if(all) '.all' else ''
+	return(paste('tfr.trajectories.plot',all.suffix, '(pred,', assemble.arguments(param, svalue(e$graph.pars)), ')', sep=''))
+}
 
-	pars.value <- svalue(e$traj.graph.pars)
-	if (show.type == 'plot') {
-		if(!is.null(country.pars$code)) { # one country
-			param.plot1c <- get.parameters(param.names.graph, env=param.env, quote=h$action$script, 
-											retrieve.from.widgets=FALSE)
-			cmd <- paste(cmd, 'tfr.trajectories.plot(pred,',
-						paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ',',
-						pars.value, ')')
-			if (h$action$script) {
-				create.script.widget(cmd, h$action$mw, package="bayesTFR")
-			} else {
-				create.graphics.window(parent=h$action$mw, title=paste("Trajectories for", country.pars$name))
-				eval(parse(text=cmd))
-			}
-		} else { # all countries
-			param.names.graph[['text']] <- c('output.dir', 'output.type')
-			param.names.graph$logical <- c(param.names.graph$logical, 'verbose')
-			param.plot.allc <- get.parameters(param.names.graph, env=param.env, quote=h$action$script,
-												 retrieve.from.widgets=FALSE)
-			cmd <- paste(cmd, 'tfr.trajectories.plot.all(pred, ', 
-						paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), sep='')
-			if(!is.null(pars.value)) {
-				if(nchar(pars.value)>0)
-					cmd <- paste(cmd, ',', pars.value)
-			}
-			cmd <- paste(cmd, ')', sep='')
-			if (h$action$script) {
-				create.script.widget(cmd, h$action$mw, package="bayesTFR")
-			} else {
-				eval(parse(text=cmd))
-			}
-		}
-	} else {
-		# Table
-		param.table <- get.parameters(param.names.table, env=param.env, quote=FALSE, retrieve.from.widgets=FALSE)
-		table.values <- do.call('tfr.trajectories.table', c(list(tfr.pred=pred), param.table))
-		table.values <- round(table.values[!apply(is.na(table.values), 1, all),],2)
-		table.values <- cbind(rownames(table.values), table.values)
-		colnames(table.values)[1] <- 'year'
-		win <- gwindow(country.pars$name, parent=h$action$mw, height=max(min(22.2*(dim(table.values)[1]+1),600), 100))
-		g <- ggroup(container=win, horizontal=FALSE, expand=TRUE)
-		gt <- gtable(table.values, container=g, expand=TRUE)
-		gbutton('Print to R Console', container=g, handler=function(h,...){
-										print(do.call('tfr.trajectories.table', c(list(tfr.pred=pred), param.table)))})
-	}
+get.tfr.table.title <- function(country, pred, ...) 
+	return (country)
+
+tfr.get.trajectories.table.values <- function(pred, param, ...) {
+	return(do.call('tfr.trajectories.table', c(list(pred), param)))
 }
 
 showMap <- function(h, ...) {
@@ -594,7 +544,7 @@ showMap <- function(h, ...) {
 	package <- svalue(e$map.package)
 	map.function <- if(package == 'rworldmap') 'tfr.map' else 'tfr.map.gvis'
 	if(h$action$script) {
-		cmd <- paste('pred <- get.tfr.prediction(', paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 
+		cmd <- paste('pred <- get.tfr.prediction(', assemble.arguments(param.pred), 
 						')\n', sep='')
 		if (par.name == 'TFR') {
 			 if(package == 'rworldmap') {
@@ -625,13 +575,14 @@ showMap <- function(h, ...) {
 		if(package == 'rworldmap') param.map[['device']] <- 'dev.new'
 		if (package == 'googleVis') param.map[['pi']] <- bounds
 		g <- create.graphics.map.window(parent=h$action$mw, pred=pred, params=param.map, percentile=percentile, 
-										is.gvis= package == 'googleVis', title="World Map")
+										is.gvis= package == 'googleVis', title="World Map", 
+										cw.main=paste(c(par.name, percentile), collapse=', '))
 	}
 }
 
 	
 create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvis=FALSE, title='', type='tfr', 
-											main.part=NULL, dpi=80) {
+											cw.main='', dpi=80) {
 	meta <- pred$mcmc.set$meta
 	est.periods <- bayesTFR:::get.tfr.periods(meta)
 	proj.periods <- bayesTFR:::get.prediction.periods(meta, pred$nr.projections+1)
@@ -648,11 +599,6 @@ create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvi
 		is.projection <- ind.proj['is.projection']
 		if(update.control.win)
 			svalue(year.label) <- if(is.projection) 'Projection year:' else 'Estimation year:'
-		#measure <- if(is.null(params$par.name)) toupper(type) else params$par.name
-		#main <- paste(if(is.projection) proj.periods[projection.index] else est.periods[projection.index], 
-		#			if(is.null(main.part)) measure else main.part, ":",
-		#			if(is.median) percentile else paste(substr(percentile, 1, 5), ' bound of ',
-		#						substr(percentile, 7,8), '% interval', sep=''))
 		do.call(paste(type, '.map', if(is.gvis) '.gvis' else '', sep=''), 
 				c(map.pars, list(projection.year=projection.year #, main=main
 					)))
@@ -669,8 +615,9 @@ create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvi
 	est.years <- bayesTFR:::get.estimation.years(meta)
 	years <- c(est.years[-lest.periods], bayesTFR:::get.all.prediction.years(pred))
 	e <- new.env()
-	win <- gwindow(paste(title, 'Control Panel:', percentile), height=70, parent=parent, horizontal=FALSE)
+	win <- bDem.gwindow(paste(title, 'Control Panel'), height=70, parent=parent, horizontal=FALSE)
 	g <- ggroup(container=win, horizontal=FALSE, expand=TRUE)
+	glabel(cw.main, container=g)
 	g1 <- ggroup(container=g, horizontal=TRUE)
 	year.label <- glabel("Projection year:", container=g1)
 	proj.year <- gspinbutton(from= min(years), to=max(years), by=5, value=years[lest.periods], container=g1)
@@ -679,13 +626,13 @@ create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvi
 	if (!is.gvis) {
 		addSpring(g1)
 		glabel("Output type:", container=g1)
-		e$type <- gdroplist(c("pdf", "postscript", "png", "jpeg", "tiff", "bmp"), container=g1)
+		e$type <- bDem.gdroplist(c("pdf", "postscript", "png", "jpeg", "tiff", "bmp"), container=g1)
 		height <- list()
 		height[['png']] <- height[['jpeg']] <- height[['tiff']] <- height[['bmp']] <- 500
 		height[['pdf']] <- height[['postscript']] <- 7
 		e$height <- height
 		e$width <- 'default'
-		gb <- gbutton('Save', container=g1)
+		gb <- bDem.gbutton('Save', container=g1)
 		addHandlerClicked(gb, handler=saveGraph, action=list(mw=win, env=e, dpi=dpi, dev=dev.cur()))
 		addHandlerChanged(proj.year, handler=newMap, action=list(dev=dev.cur(), map.pars=params))
 		addHandlerDestroy(win, handler=close.map, action=list(dev=dev.cur()))
@@ -701,45 +648,43 @@ showDLcurve <- function(h, ...) {
 	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
 	country.pars <- get.country.code.from.widget(e$dlc.country$country.w, e$dlc.country)
 	if(is.null(country.pars)) return(NULL)
-	param.env <-list(sim.dir=svalue(e$sim.dir), pi=svalue(e$dlc.ci), country=country.pars$code, 
-					 nr.curves=svalue(e$dlc.nr.curves), burnin=svalue(e$dlc.bi),
-					 tfr.max=svalue(e$dlc.tfr.max), predictive.distr=svalue(e$predictive.distr),
-					 output.dir=country.pars$output.dir, output.type=country.pars$output.type,
-					 verbose=TRUE
-						)
-	param.names1 <- list(text='sim.dir')
-	param.names.graph <- list(numvector='pi', numeric=c('country', 'nr.curves', 'burnin', 'tfr.max'), logical=c('predictive.distr'))
-	param.mcmc <- get.parameters(param.names1, env=param.env, quote=h$action$script, retrieve.from.widgets=FALSE)
+	param.names.all <- list(text='sim.dir', numvector=c('pi'),
+							numeric=c('nr.curves', 'burnin', 'tfr.max'),
+							logical='predictive.distr')
+	param.env <- get.parameters(param.names.all, env=e, quote=h$action$script)
+	param.env.rest <- list(country=country.pars$code, output.dir=country.pars$output.dir,
+							output.type=country.pars$output.type, verbose=TRUE)
+	param.env <- c(param.env, 
+					get.parameters(list(text=c('output.dir', 'output.type'), 
+										logical='verbose', numeric='country'), 
+									param.env.rest, quote=TRUE,
+									retrieve.from.widgets=FALSE))
+
+	param.mcmc <- param.env['sim.dir']
 	if(h$action$script) {
-		cmd <- paste('pred <- get.tfr.prediction(', paste(paste(names(param.mcmc), param.mcmc, sep='='), collapse=', '), 
-						')\n', sep='')
+		cmd <- paste('m <- get.tfr.mcmc(', assemble.arguments(param.mcmc), ')\n', sep='')
 	} else {
-		pred <- do.call('get.tfr.prediction', param.mcmc)
+		m <- do.call('get.tfr.mcmc', param.mcmc)
 		cmd <- ''
 	}
-	pars.value <- svalue(e$dlc.graph.pars)
+	pars.value <- svalue(e$graph.pars)
+	param.plot1c <- list()
+	for (par in c('pi', 'nr.curves', 'tfr.max', 'country', 'burnin', 'predictive.distr')) 
+		if(is.element(par, names(param.env))) param.plot1c <- c(param.plot1c, param.env[par])
+
 	if(!is.null(country.pars$code)) { # one country
-		param.plot1c <- get.parameters(param.names.graph, env=param.env, quote=h$action$script, retrieve.from.widgets=FALSE)
-		cmd <- paste(cmd, 'DLcurve.plot(mcmc.list=pred, ',
-						paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ', ',
-						pars.value, ')', sep='')
+		cmd <- paste(cmd, 'DLcurve.plot(mcmc.list=m, ', assemble.arguments(param.plot1c, pars.value), ')', sep='')
 		if (h$action$script) {
-			script.text <- gwindow('bayesTFR commands', parent=h$action$mw)
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package="bayesTFR")
 		} else {
 			create.graphics.window(parent=h$action$mw, title=paste("Double Logistic Curves for", country.pars$name))
 			eval(parse(text=cmd))
 		}
 	} else { # all countries
-		param.names.graph[['text']] <- c('output.dir', 'output.type')
-		param.names.graph$logical <- c(param.names.graph$logical, 'verbose')
-		param.plot.allc <- get.parameters(param.names.graph, env=param.env, quote=h$action$script, retrieve.from.widgets=FALSE)
-		cmd <- paste(cmd, 'DLcurve.plot.all(mcmc.list=pred, ', 
-						paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), ', ',
-					pars.value, ')', sep='')
+		param.plot.allc <- param.env[c(names(param.plot1c), 'output.dir', 'output.type',  'verbose')]
+		cmd <- paste(cmd, 'DLcurve.plot.all(mcmc.list=m, ', assemble.arguments(param.plot.allc, pars.value), ')', sep='')
 		if (h$action$script) {
-			script.text <- gwindow('bayesTFR commands', parent=h$action$mw)
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package="bayesTFR")
 		} else {
 			eval(parse(text=cmd))
 		}
@@ -748,21 +693,20 @@ showDLcurve <- function(h, ...) {
 
 showParTraces <- function(h, ...) {
 	e <- h$action$env
-	cs <- svalue(e$traces.cs.chb, index=TRUE)
-	dir <- svalue(e$sim.dir)
-	burnin <- svalue(e$traces.burnin)
-	thin <- svalue(e$traces.thin)
+	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
+	param.names <- list(text='sim.dir', numeric=c('nr.points', 'burnin', 'thin'))
+	params <- get.parameters(param.names, env=e, quote=FALSE)
+	cs <- svalue(e$cs.chb, index=TRUE)
+	all.pars <- svalue(e$pars.chb)
 	print.summary <- h$action$print.summary
 	if (cs==2) {
-		country.pars <- get.country.code.from.widget(e$traces.country$country.w, e$traces.country)
+		country.pars <- get.country.code.from.widget(e$country$country.w, e$country)
 		if(is.null(country.pars)) return(NULL)
 	}	
-	all.pars <- svalue(e$traces.pars.chb)
-	nr.points <- svalue(e$traces.nr.points)
 	if(print.summary) {
 		warn <- getOption('warn')
 		options(warn=-1) # disable warning messages
-		mcmc.set <- get.tfr.mcmc(dir)
+		mcmc.set <- get.tfr.mcmc(params[['sim.dir']])
 		options(warn=warn)
 		con <- textConnection("mc.summary", "w", local=TRUE)
 		mc.exist <- TRUE
@@ -774,32 +718,34 @@ showParTraces <- function(h, ...) {
 	} else create.graphics.window(parent=h$action$mw, title="Parameter traces", dpi=150)
 	if (cs==2) { # country-specific parameters
 		if (!all.pars) {
-			pars <- svalue(e$traces.par.cs.dl)
+			pars <- svalue(e$par.cs.dl)
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, country=country.pars$code, par.names.cs=pars, par.names=NULL, 
-											burnin=burnin, thin=thin))
+											burnin=params[['burnin']], thin=params[['thin']]))
 			} else 
-			tfr.partraces.cs.plot(sim.dir=dir, country=country.pars$code, par.names=pars, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+			tfr.partraces.cs.plot(sim.dir=params[['sim.dir']], country=country.pars$code, par.names=pars, 
+											nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		} else {
 			if(print.summary){if (mc.exist) print(summary(mcmc.set, country=country.pars$code, par.names=NULL, 
-											burnin=burnin, thin=thin))
+											burnin=params[['burnin']], thin=params[['thin']]))
 			} else 
-			tfr.partraces.cs.plot(sim.dir=dir, country=country.pars$code, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+			tfr.partraces.cs.plot(sim.dir=params[['sim.dir']], country=country.pars$code, nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		}
 	} else { # World-parameters
 		if (!all.pars) { # selected pars
-			pars <- svalue(e$traces.par.dl)
+			pars <- svalue(e$par.dl)
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, par.names.cs=NULL, par.names=pars, 
-											burnin=burnin, thin=thin))
+											burnin=params[['burnin']], thin=params[['thin']]))
 			} else 
-			tfr.partraces.plot(sim.dir=dir, par.names=pars, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+			tfr.partraces.plot(sim.dir=params[['sim.dir']], par.names=pars, nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		} else { # all pars
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, par.names.cs=NULL, 
-											burnin=burnin, thin=thin))
+											burnin=params[['burnin']], thin=params[['thin']]))
 			} else 
-			tfr.partraces.plot(sim.dir=dir, nr.points=nr.points)
+			tfr.partraces.plot(sim.dir=params[['sim.dir']], nr.points=params[['nr.points']], burnin=params[['burnin']], 
+									thin=params[['thin']])
 		}
 	}
 	if(print.summary) {
@@ -821,8 +767,8 @@ computeConvergenceDiag <- function(h, ...) {
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	if(params$express || params$country.sampling.prop >= 1) params$country.sampling.prop <- NULL
 	if (h$action$script) {
-		cmd <- paste(type, '.diagnose(', paste(paste(names(params), params, sep='='), collapse=', '), ', ',
-					paste(paste(names(e$params), e$params, sep='='), collapse=', '), ')',sep='')
+		cmd <- paste(type, '.diagnose(', assemble.arguments(params), ', ',
+					assemble.arguments(e$params), ')',sep='')
 		create.script.widget(cmd, h$action$mw, package=h$action$package)
 	} else {
 		run <- FALSE
@@ -836,7 +782,13 @@ computeConvergenceDiag <- function(h, ...) {
 					icon='question', parent=h$action$mw,
 					handler=function(h1, ...) run <<- TRUE)
 			} else run <- TRUE
-			if(run) do.call(paste(type, '.diagnose', sep=''), c(params))
+			if(run) 
+				.run.diagnostics(e, type=h$action$package, handler=get.diagnostics.status, 
+								option=paste('bDem', h$action$package, 'diagnose', sep='.'), 
+								call=paste(type, 'diagnose', sep='.'), params=params, 
+								sim.name=paste(h$action$package, 'diagnose'), main.win=h$action$mw,
+								action=list(sb=e$statuslabel, package=h$action$package),
+								interval=1000)
 		}
 	}
 }
@@ -852,7 +804,7 @@ showConvergenceDiag <- function(h, ...) {
 		return()
 	}
 	path = system.file("images",package="bayesDem")
-	win <- gwindow('Available Convergence Diagnostics', parent=h$action$mw)
+	win <- bDem.gwindow('Available Convergence Diagnostics', parent=h$action$mw)
 	g <- ggroup(horizontal=FALSE, container=win)
 	verb <- 'are'
 	noun.postfix <- 's'
@@ -893,3 +845,16 @@ showDiagInfo <- function(h, ...) {
 						parent=h$action$mw, width=500, height=400)
 	gtext(conv.diag, container=win)
 }
+
+.run.diagnostics <- function(type='bayesTFR', ...) {
+	statusopt <- paste('bDem.', type, '.diagnose.status', sep='')
+	opt <- list()
+	opt[statusopt] <- list(NULL)
+	options(opt)
+	res <- .run.simulation(...)
+	options(opt)
+	return(res)
+}
+
+get.diagnostics.status <- function(h, ...) 
+	.update.status(h$action$sb, paste('bDem', h$action$package, 'diagnose.status', sep='.'), 'Running diagnostics ...')

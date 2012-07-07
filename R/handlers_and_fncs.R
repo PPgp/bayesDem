@@ -40,6 +40,27 @@ create.generate.script.button <- function(handler, action, container) {
 							action=action), container=container)
 }
 
+bDem.gwindow <- function(...) {
+	win <- gwindow(...)
+	set.widget.bgcolor(win, color.main)
+	return(win)
+}
+
+bDem.gdroplist <- function(items, ...) {
+	dl <- gdroplist(items, ...)
+	cr <- gtkCellRendererCombo()
+	model <- rGtkDataFrame(items)
+	cr['model'] <- model
+	cr['text-column'] <- 0
+	cr['cell-background'] <- color.button
+	combo <- getToolkitWidget(dl)
+	combo$clear()
+	combo$packStart(cr)
+	combo$addAttribute(cr, 'text', 0)
+	#combo$setActive(selected)
+	return(dl)
+}
+
 bDem.gfilebrowse <- function(...) {
 	fb <- gfilebrowse(...)
 	get.filebrowse.button(fb)$modifyBg("normal", color.button)
@@ -208,6 +229,14 @@ get.parameters <- function(par.names, env, quote=FALSE, retrieve.from.widgets=TR
 	}
 	options(op)
 	return(params)
+}
+
+assemble.arguments <- function(params, add.params=NULL) {
+	if(is.null(params)) return ('')
+	argline <- paste(paste(names(params), params, sep='='), collapse=', ')
+	if(!is.null(add.params) && nchar(add.params) > 0)
+		argline <- paste(argline, ',', add.params)
+	return(argline)
 }
 
 has.required.arguments <- function(par.names, env) {

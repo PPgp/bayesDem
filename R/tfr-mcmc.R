@@ -240,7 +240,7 @@ configure.auto.run <- function(h, ...) {
 	} else { # create the window
 		
 	h$action$env$auto.conf.win <- auto.conf.win <- 
-					gwindow('Configuration of Auto Run',
+					bDem.gwindow('Configuration of Auto Run',
 						parent=h$action$mw, visible=FALSE,
 						handler=function(h, ...) {
 							h$action$env$auto.run.okhandler <- NULL
@@ -275,11 +275,11 @@ configure.auto.run <- function(h, ...) {
 	addSpring(g)
 	# Buttons
 	button.g <- ggroup(container=g, horizontal=TRUE)
-	gbutton('Cancel', container=button.g, handler=function(h, ...) 
+	bDem.gbutton('Cancel', container=button.g, handler=function(h, ...) 
 					visible(auto.conf.win) <- FALSE)
 	addSpring(button.g)
-	gbutton(action=gaction(label='  Set to Default Values  ', icon='refresh', handler=set.defaults), container=button.g)
-	e$auto.conf.okbutton <- gbutton('OK', container=button.g)
+	bDem.gbutton(action=gaction(label='  Set to Default Values  ', icon='refresh', handler=set.defaults), container=button.g)
+	e$auto.conf.okbutton <- bDem.gbutton('OK', container=button.g)
 	
 		if(!is.null(h$action$env$auto.conf)) { # OK button previously clicked 
 			for (par in names(defaults)) 
@@ -369,7 +369,7 @@ mcmc.advance.settings <- function(h, ...) {
 		visible(h$action$env$adv.set.win) <- TRUE
 	} else { # create the Advanced Parameters window
 		h$action$env$adv.set.win <- adv.set.win <- 
-					gwindow('Settings for Bayesian Hierarchical TFR Model ',
+					bDem.gwindow('Settings for Bayesian Hierarchical TFR Model ',
 						parent=h$action$mw, visible=FALSE,
 						handler=function(h, ...) {
 							h$action$env$adv.set.okhandler <- NULL
@@ -547,7 +547,7 @@ mcmc.advance.settings <- function(h, ...) {
 	gamma.g2[2,1, expand=FALSE] <- glabel('Gamma rate: nu_0/2*s_0^2', container=gamma.g2)
 	
 	# Starting values
-	start.f <- gframe("<span color='blue'>Starting Values</span>", markup=TRUE, container=e$adv.g, horizontal=FALSE)
+	start.f <- gframe("<span color='blue'>Starting values</span>", markup=TRUE, container=e$adv.g, horizontal=FALSE)
 	start.g1 <- ggroup(container=start.f, horizontal=TRUE)
 	glabel('Leave empty for starting values being equally-spaced between lower and upper bound.', container=start.g1)
 	
@@ -570,12 +570,12 @@ mcmc.advance.settings <- function(h, ...) {
 
 	# Buttons
 	button.g <- ggroup(container=e$adv.g, horizontal=TRUE)
-	gbutton('Cancel', container=button.g, handler=function(h, ...) 
+	bDem.gbutton('Cancel', container=button.g, handler=function(h, ...) 
 					visible(adv.set.win) <- FALSE)
 	addSpring(button.g)
-	e$adv.set.defaultbutton <- gbutton(action=gaction(label='  Set to Default Values  ', icon='refresh', handler=set.defaults), 
+	e$adv.set.defaultbutton <- bDem.gbutton(action=gaction(label='  Set to Default Values  ', icon='refresh', handler=set.defaults), 
 								container=button.g)
-	e$adv.set.okbutton <- gbutton('OK', container=button.g)
+	e$adv.set.okbutton <- bDem.gbutton('OK', container=button.g)
 	
 		if(!is.null(h$action$env$params)) { # OK button previously clicked 
 			for (par in param.names) 
@@ -733,8 +733,6 @@ multiSelectCountryMenu <- function(h, ...) {
 		visible(h$action$env$extra.country.sel.win) <- FALSE
 		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) {
 			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(h$action$env$selected.extra.countries, collapse=',')
-			#print(h$action$label.widget.name)
-			#print(svalue(h$action$env[[h$action$label.widget.name]]))
 		}
 	}
 	new.window <- TRUE

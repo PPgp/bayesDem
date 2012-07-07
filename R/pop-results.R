@@ -9,7 +9,7 @@ popResults.group <- function(g, main.win, parent) {
 	aggr.g <- ggroup(horizontal=TRUE, container=gg)
 	addSpring(aggr.g)
 	glabel('Aggregation method:', container=aggr.g)
-	e$aggregation.dl <- gdroplist(c('None', 'independence', 'regional'), container=aggr.g)
+	e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=aggr.g)
 	nb <- bDem.gnotebook(container=gg, expand=TRUE)
 	traj.g <- ggroup(label="<span color='#0B6138'>Population trajectories</span>", 
 							markup=TRUE, horizontal=FALSE, container=nb)
@@ -45,7 +45,7 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 							half.child.variant=defaults.traj$half.child.variant,
 							typical.trajectory=defaults.traj$typical.trajectory), l=2)	
 	lo[1,1, anchor=leftcenter] <- glabel('Sex:', container=lo)
-	lo[1,2] <- e$sex <- gdroplist(c('both', 'female', 'male'), container=lo, selected=1)
+	lo[1,2] <- e$sex <- bDem.gdroplist(c('both', 'female', 'male'), container=lo, selected=1)
 	lo[1,3:4] <- e$sum.over.ages <- gcheckbox("Sum over ages", container=lo, checked=TRUE,
 							handler=function(h,...){
 								enabled(e$TableB.show.traj) <- svalue(h$obj)})
@@ -88,15 +88,19 @@ add.aggregation.to.env <- function(e, ...) {
 }
 
 get.additional.pop.param <- function(e, script, type, ...) {
-	if (e$age==0) e$age<- 'all'
 	param.names <- list(text=c('sex'), logical=c('sum.over.ages', 'half.child.variant'))
-	quote <- if(type=='table') script else TRUE
 	add.aggregation.to.env(e)
+	non.widget.pars <- list(text='aggregation')
+	if (is.element(0, e$age) || e$age=='all') {
+		non.widget.pars$text <- c(non.widget.pars$text, 'age')
+		e$age <- 'all'
+	} else non.widget.pars <- list(numeric='age')
+	quote <- if(type=='table') script else TRUE
+	
 	param <- c(get.parameters(param.names, env=e, quote=quote), 
-			get.parameters(list(numtext='age', text='aggregation'), 
+			get.parameters(non.widget.pars,
 					env=e, quote=quote, retrieve.from.widgets=FALSE))
-
-	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant'), 
+	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant', 'typical.trajectory'), 
 					 table=c('pi', 'country', 'sex', 'age', 'half.child.variant'),
 					 pred=c('aggregation'),
 					 pred.unquote=get.parameters(list(text='aggregation'), 
@@ -104,14 +108,22 @@ get.additional.pop.param <- function(e, script, type, ...) {
 					 table.decimal=0))
 }
 
-assemble.pop.plot.cmd <- function(param, e) {
-	return(paste('pop.trajectories.plot(pred,',
-				paste(paste(names(param), param, sep='='), collapse=', '), ',',
-						svalue(e$graph.pars), ')'))
+assemble.pop.plot.cmd <- function(param, e, all=FALSE) {
+	all.suffix <- if(all) 'All' else ''
+	return(paste('pop.trajectories.plot', all.suffix, '(pred,',
+				assemble.arguments(param, svalue(e$graph.pars)), ')'))
 }
 
-get.pop.table.title <- function(country, pred) 
-	return (country)
+get.pop.table.title <- function(country, pred, e) {
+	title <- country
+	if(svalue(e$sex) != 'both') title <- paste(title, svalue(e$sex))
+	if(nchar(svalue(e$age.label)) > 0) title <- paste(title, 'age:', svalue(e$age.label))
+	return (title)
+}
+
+pop.get.trajectories.table.values <- function(pred, param, ...) {
+	return(do.call('pop.trajectories.table', c(list(pred), param)))
+}
 
 pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	leftcenter <- c(-1, 0)
@@ -193,10 +205,13 @@ show.pop.pyramid <- function(h, ...) {
 	param.pred.ev <- c(get.parameters(list(text=c('sim.dir')), env=e, quote=FALSE),
 			get.parameters(list(text=c('aggregation')), env=e, quote=FALSE, retrieve.from.widgets=FALSE))		 
 	pred <- do.call('get.pop.prediction', param.pred.ev)
+	if(is.null(pred)) {
+		gmessage('Simulation directory contains no prediction of the specified type.', 
+					title='Input Error', icon='error')
+		return(NULL)
+	}
 	if(h$action$script) {
-		cmd <- paste('pred <- get.pop.prediction(', 
-					paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 
-						')\n', sep='')
+		cmd <- paste('pred <- get.pop.prediction(', assemble.arguments(param.pred), ')\n', sep='')
 	} else {	
 		cmd <- ''
 	}
@@ -213,19 +228,16 @@ show.pop.pyramid <- function(h, ...) {
 	if(!is.null(param.env$country)) { # one country
 		years <- param.env$year
 		if (h$action$script) {
-			script.text <- gwindow('bayesPop commands', parent=h$action$mw)
 			for(year in years) {
 				param.plot1c$year <- c(year, comp.years)
-				cmd <- paste(cmd, pyr.command, '(pred,', 
-					paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ',)\n')
+				cmd <- paste(cmd, pyr.command, '(pred,', assemble.arguments(param.plot1c), ')\n')
 			}
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package='bayesPop')
 		} else {
 			base.cmd <- cmd
 			for(year in years) {
 				param.plot1c$year <- c(year, comp.years)
-				cmd <- paste(base.cmd, pyr.command, '(pred,', 
-					paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ',)\n')
+				cmd <- paste(base.cmd, pyr.command, '(pred,', assemble.arguments(param.plot1c), ')\n')
 				create.graphics.window(parent=h$action$mw, title=paste("Pyramid for", country.pars$name), 
 										ps=9, width=700, height=500)
 				eval(parse(text=cmd))
@@ -236,12 +248,9 @@ show.pop.pyramid <- function(h, ...) {
 		year.str <- paste('year=list(',paste(years, collapse=', '), '), ', sep='')
 		param.plot1c$year <- NULL
 		param.plot.allc <- param.env[c(names(param.plot1c), 'output.dir', 'output.type',  'verbose')]
-		cmd <- paste(cmd, pyr.command, 'All(pred, ', year.str, 
-					paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), sep='')
-		cmd <- paste(cmd, ')', sep='')
+		cmd <- paste(cmd, pyr.command, 'All(pred, ', year.str, assemble.arguments(param.plot.allc), ')', sep='')
 		if (h$action$script) {
-			script.text <- gwindow('bayesPop commands', parent=h$action$mw)
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package='bayesPop')
 		} else {
 			eval(parse(text=cmd))
 		}
@@ -254,7 +263,8 @@ selectAgeMenuPop <- function(h, ...) {
 		h$action$env$age <- if (is.element(0, age)) 'all' else age 
 		visible(h$action$env$age.sel.win) <- FALSE
 		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) 
-			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(bayesPop:::get.age.labels(h$action$env$age, collapse=TRUE, age.is.index=TRUE), 
+			svalue(h$action$env[[h$action$label.widget.name]]) <- if (h$action$env$age == 'all') '' 
+										else paste(bayesPop:::get.age.labels(h$action$env$age, collapse=TRUE, age.is.index=TRUE), 
 																		collapse=',')
 	}
 	if (!is.null(h$action$env$age.sel.win)) 

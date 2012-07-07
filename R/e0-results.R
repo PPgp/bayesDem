@@ -54,7 +54,7 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 	lo[1,6] <- e$typical.trajectory <- gcheckbox('Typical trajectory', checked=defaults.traj$typical.trajectory, 
 								container=lo)
 	lo[3,1, anchor=leftcenter] <- "Type:"
-	lo[3,2] <- e$sex <- gdroplist(c('Female', 'Male', 'Both Marginal', 'Both Joint', 'Gap'), container=lo, selected=1,
+	lo[3,2] <- e$sex <- bDem.gdroplist(c('Female', 'Male', 'Both Marginal', 'Both Joint', 'Gap'), container=lo, selected=1,
 				handler=function(h,...) {
 					if(svalue(h$obj) == 'Both Marginal') {svalue(e$nr.traj) <- 0; svalue(e$pi) <- 95}
 					if(svalue(h$obj) == 'Both Joint') {svalue(e$nr.traj) <- 500; svalue(e$pi) <- 95}
@@ -62,6 +62,7 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 					if(is.element(svalue(h$obj), c('Female', 'Male'))) {svalue(e$nr.traj) <- 20; svalue(e$pi) <- '80, 95'}
 					enabled(e$TableB.show.traj) <- is.element(svalue(h$obj), c('Female', 'Male'))
 					enabled(e$years) <- svalue(h$obj) == 'Both Joint'
+					enabled(e$typical.trajectory) <- is.element(svalue(h$obj), c('Female', 'Male', 'Both Marginal'))
 				})
 	lo[3,3, anchor=leftcenter] <- glabel('Years:', container=lo)
 	lo[3,4] <- e$years <- gedit('2013, 2048, 2098', width=10, container=lo)
@@ -92,7 +93,7 @@ get.additional.e0.param <- function(e, ...) {
 	sex <- svalue(e$sex)
 	param <- list(both.sexes= sex=='Both Marginal', joint.male= sex == 'Male')
 	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'both.sexes', 'typical.trajectory'), 
-					pred=c('joint.male'),
+					pred='joint.male', pred.unquote=param['joint.male'],
 					table=c('pi', 'country'), table.decimal=2))
 }
 	
@@ -102,19 +103,22 @@ assemble.e0.plot.cmd <- function(param, e, all=FALSE) {
 	all.suffix <- if(all) '.all' else ''
 	if(is.element(plot.type, c('Female', 'Male', 'Both Marginal'))) 
 		return(paste('e0.trajectories.plot',all.suffix, '(pred,',
-				paste(paste(names(param), param, sep='='), collapse=', '), ',',
-						svalue(e$graph.pars), ')', sep=''))
+				assemble.arguments(param, svalue(e$graph.pars)), ')', sep=''))
+	
 	if(plot.type == 'Both Joint') {
 		parlist <- list(country=param$country, years=as.numeric(strsplit(svalue(e$years), ',')[[1]]), 
 						nr.points=param$nr.traj, pi=param$pi)
-		return(paste('e0.joint.plot',all.suffix, '(pred,', paste(paste(names(parlist), parlist, sep='='), collapse=', '), ',',
-						svalue(e$graph.pars), ')', sep=''))
+		return(paste('e0.joint.plot',all.suffix, '(pred,', assemble.arguments(parlist, svalue(e$graph.pars)), ')', sep=''))
 	}
 	# gap plot
 	parlist <- list(country=param$country, nr.traj=param$nr.traj, pi=param$pi, xlim=param$xlim)
-	return(paste('e0.gap.plot',all.suffix, '(pred,', paste(paste(names(parlist), parlist, sep='='), collapse=', '), ',',
-						svalue(e$graph.pars), ')', sep=''))
+	return(paste('e0.gap.plot',all.suffix, '(pred,', assemble.arguments(parlist, svalue(e$graph.pars)), ')', sep=''))
 }
+
+e0.get.trajectories.table.values <- function(pred, param, ...) {
+	return(do.call('e0.trajectories.table', c(list(pred), param)))
+}
+
 
 show.e0.traj <- function(h, ...) {
 	e <- h$action$env
@@ -146,10 +150,14 @@ show.e0.traj <- function(h, ...) {
 	param.pred.ev <- c(get.parameters(list(text='sim.dir'), env=e, quote=FALSE),
 						add.param.names[['pred.unquote']])
 	pred <- do.call(paste('get.', pred.type, '.prediction', sep=''), param.pred.ev)
+	if(is.null(pred)) {
+		gmessage('Simulation directory contains no prediction of the specified type.', 
+					title='Input Error', icon='error')
+		return(NULL)
+	}
 	if(h$action$script) {
 		cmd <- paste('pred <- get.', pred.type, '.prediction(', 
-					paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 
-						')\n', sep='')
+					assemble.arguments(param.pred), ')\n', sep='')
 	} else {	
 		cmd <- ''
 	}
@@ -169,23 +177,23 @@ show.e0.traj <- function(h, ...) {
 		if(!is.null(param.env$country)) { # one country
 			cmd <- paste(cmd, do.call(paste('assemble.', pred.type, '.plot.cmd', sep=''), list(param.plot1c, e)), sep='')
 			if (h$action$script) {
-				script.text <- gwindow(paste(package,'commands'), parent=h$action$mw)
-				gtext(cmd, container=script.text)
+				create.script.widget(cmd, h$action$mw, package=package)
 			} else {
 				create.graphics.window(parent=h$action$mw, title=paste("Trajectories for", country.pars$name))
 				eval(parse(text=cmd))
 			}
 		} else { # all countries
 			param.plot.allc <- param.env[c(names(param.plot1c), 'output.dir', 'output.type',  'verbose')]
-			cmd <- paste(cmd, paste(pred.type, '.trajectories.plot', 
-						if(pred.type=='pop') 'All' else '.all',
-						'(pred, ', sep=''), 
-					paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), sep='')
-			if(!is.null(pars.value)) {
-				if(nchar(pars.value)>0)
-					cmd <- paste(cmd, ',', pars.value)
-			}
-			cmd <- paste(cmd, ')', sep='')
+			cmd <- paste(cmd, do.call(paste('assemble.', pred.type, '.plot.cmd', sep=''), list(param.plot.allc, e, all=TRUE)), sep='')
+			# cmd <- paste(cmd, paste(pred.type, '.trajectories.plot', 
+						# if(pred.type=='pop') 'All' else '.all',
+						# '(pred, ', sep=''), 
+					# paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), sep='')
+			# if(!is.null(pars.value)) {
+				# if(nchar(pars.value)>0)
+					# cmd <- paste(cmd, ',', pars.value)
+			# }
+			# cmd <- paste(cmd, ')', sep='')
 			if (h$action$script) {
 				create.script.widget(cmd, h$action$mw, package=package)
 			} else {
@@ -195,33 +203,33 @@ show.e0.traj <- function(h, ...) {
 	} else {
 		# Table
 		param.table <- param.env[add.param.names[['table']][is.element(add.param.names[['table']], names(param.env))]]
-		table.values <- do.call(paste(pred.type, '.trajectories.table', sep=''), 
-							c(list(pred), param.table))
+		table.values <- do.call(paste(pred.type, '.get.trajectories.table.values', sep=''), 
+							list(pred, param.table, e))
 		table.values <- round(table.values[!apply(is.na(table.values), 1, all),],
 								add.param.names[['table.decimal']])
 		table.values <- cbind(rownames(table.values), table.values)
 		colnames(table.values)[1] <- 'year'
-		win <- gwindow(do.call(paste('get.', pred.type, '.table.title', sep=''), 
-						list(country.pars$name, pred)),
+		win <- bDem.gwindow(do.call(paste('get.', pred.type, '.table.title', sep=''), 
+						list(country.pars$name, pred, e)),
 					parent=h$action$mw, height=max(min(22.2*(dim(table.values)[1]+1),600), 100))
 		g <- ggroup(container=win, horizontal=FALSE, expand=TRUE)
 		gt <- gtable(table.values, container=g, expand=TRUE)
-		gbutton('Print to R Console', container=g, handler=function(h,...){
+		bDem.gbutton('Print to R Console', container=g, handler=function(h,...){
 										print(do.call(paste(pred.type, '.trajectories.table', sep=''), 
 												c(list(pred), param.table)))})
 	}
 }
 
-get.e0.table.title <- function(country, pred) 
+get.e0.table.title <- function(country, pred, ...) 
 	return (paste(country, '-', bayesLife:::get.sex.label(pred$mcmc.set$meta)))
 	
 e0.show.map.group <- function(g, main.win, parent.env) {
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	addSpace(g, 10)
-	lo <- .create.map.settings.group(g, e)
+	lo <- .create.map.settings.group(g, e, measures=c('e0', bayesLife:::e0.parameter.names.cs.extended()))
 	lo[4, 1, anchor=c(-1,0)] <- "Sex:"
-	lo[4, 2] <- e$sex <- gdroplist(c('Female', 'Male'), container=lo, selected=1)
+	lo[4, 2] <- e$sex <- bDem.gdroplist(c('Female', 'Male'), container=lo, selected=1)
 	addSpring(g)
 	bg <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='e0.map', package='bayesLife', parent.group=bg,
@@ -251,8 +259,7 @@ e0.showMap <- function(h, ...) {
 	param.pred$joint.male <- sex == 'Male'
 	map.function <- if(package == 'rworldmap') 'e0.map' else 'e0.map.gvis'
 	if(h$action$script) {
-		cmd <- paste('pred <- get.e0.prediction(', paste(paste(names(param.pred), param.pred, sep='='), collapse=', '), 
-						')\n', sep='')
+		cmd <- paste('pred <- get.e0.prediction(', assemble.arguments(param.pred), ')\n', sep='')
 		if (par.name == 'e0') {
 			if(package == 'rworldmap') {
 				cmd <- paste(cmd, "param.map <- get.e0.map.parameters(pred, same.scale=", same.scale,
@@ -279,7 +286,8 @@ e0.showMap <- function(h, ...) {
 		if(package == 'rworldmap') param.map[['device']] <- 'dev.new'
 		if (package == 'googleVis') param.map[['pi']] <- bounds
 		g <- create.graphics.map.window(parent=h$action$mw, pred=pred, params=param.map, percentile=percentile, 
-										is.gvis= package == 'googleVis', title="World Map", type='e0', main.part='e0')
+										is.gvis= package == 'googleVis', title="World Map", type='e0', 
+										cw.main=paste(c(par.name, sex, percentile), collapse=', '))
 	}
 }
 
@@ -294,7 +302,7 @@ e0.show.dl.group <- function(g, main.win, parent.env) {
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
 	e$dlc.country <- create.country.widget(country.f, defaults.dl.all, main.win, prediction=FALSE, 
-											parent.env=e)
+											parent.env=e, disable.table.button=FALSE)
 	addSpace(g, 10)
 	dl.f <- gframe("<span color='blue'>DL curve settings</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
@@ -345,8 +353,7 @@ e0.showDLcurve <- function(h, ...) {
 
 	param.mcmc <- param.env['sim.dir']
 	if(h$action$script) {
-		cmd <- paste('m <- get.e0.mcmc(', paste(paste(names(param.mcmc), param.mcmc, sep='='), collapse=', '), 
-						')\n', sep='')
+		cmd <- paste('m <- get.e0.mcmc(', assemble.arguments(param.mcmc), ')\n', sep='')
 	} else {
 		m <- do.call('get.e0.mcmc', param.mcmc)
 		cmd <- ''
@@ -357,12 +364,9 @@ e0.showDLcurve <- function(h, ...) {
 		if(is.element(par, names(param.env))) param.plot1c <- c(param.plot1c, param.env[par])
 
 	if(!is.null(country.pars$code)) { # one country
-		cmd <- paste(cmd, 'e0.DLcurve.plot(mcmc.list=m, ',
-						paste(paste(names(param.plot1c), param.plot1c, sep='='), collapse=', '), ', ',
-						pars.value, ')', sep='')
+		cmd <- paste(cmd, 'e0.DLcurve.plot(mcmc.list=m, ', assemble.arguments(param.plot1c, pars.value), ')', sep='')
 		if (h$action$script) {
-			script.text <- gwindow('bayesLife commands', parent=h$action$mw)
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package="bayesLife")
 		} else {
 			create.graphics.window(parent=h$action$mw, title=paste("Double Logistic Curves for", country.pars$name))
 			eval(parse(text=cmd))
@@ -370,11 +374,9 @@ e0.showDLcurve <- function(h, ...) {
 	} else { # all countries
 		param.plot.allc <- param.env[c(names(param.plot1c), 'output.dir', 'output.type',  'verbose')]
 		cmd <- paste(cmd, 'e0.DLcurve.plot.all(mcmc.list=m, ', 
-						paste(paste(names(param.plot.allc), param.plot.allc, sep='='), collapse=', '), ', ',
-					pars.value, ')', sep='')
+						assemble.arguments(param.plot.allc, pars.value), ')', sep='')
 		if (h$action$script) {
-			script.text <- gwindow('bayesLife commands', parent=h$action$mw)
-			gtext(cmd, container=script.text)
+			create.script.widget(cmd, h$action$mw, package="bayesLife")
 		} else {
 			eval(parse(text=cmd))
 		}
@@ -386,13 +388,6 @@ e0.show.traces.group <- function(g, main.win, parent.env) {
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'e0'
 	.create.partraces.settings.group(g, e, par.names=e0.parameter.names(), par.names.cs=e0.parameter.names.cs())
-	e$pars.chb <- e$traces.pars.chb
-	e$par.dl <- e$traces.par.dl
-	e$par.cs.dl <- e$traces.par.cs.dl
-	e$cs.chb <- e$traces.cs.chb
-	e$nr.points <- e$traces.nr.points
-	e$burnin <- e$traces.burnin
-	e$thin <- e$traces.thin
 	addSpring(g)
 	button.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='e0.partraces.plot', package='bayesLife', parent.group=button.g,
@@ -408,21 +403,20 @@ e0.show.traces.group <- function(g, main.win, parent.env) {
 
 e0.showParTraces <- function(h, ...) {
 	e <- h$action$env
+	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
+	param.names <- list(text='sim.dir', numeric=c('nr.points', 'burnin', 'thin'))
+	params <- get.parameters(param.names, env=e, quote=FALSE)
 	cs <- svalue(e$cs.chb, index=TRUE)
-	dir <- svalue(e$sim.dir)
-	burnin <- svalue(e$burnin)
-	thin <- svalue(e$thin)
+	all.pars <- svalue(e$pars.chb)
 	print.summary <- h$action$print.summary
 	if (cs==2) {
 		country.pars <- get.country.code.from.widget(e$country$country.w, e$country)
 		if(is.null(country.pars)) return(NULL)
 	}	
-	all.pars <- svalue(e$pars.chb)
-	nr.points <- svalue(e$nr.points)
 	if(print.summary) {
 		warn <- getOption('warn')
 		options(warn=-1) # disable warning messages
-		mcmc.set <- get.e0.mcmc(dir)
+		mcmc.set <- get.e0.mcmc(params[['sim.dir']])
 		options(warn=warn)
 		con <- textConnection("mc.summary", "w", local=TRUE)
 		mc.exist <- TRUE
@@ -437,27 +431,28 @@ e0.showParTraces <- function(h, ...) {
 		if (!all.pars) {
 			pars <- svalue(e$par.cs.dl)
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, country=country.pars$code, par.names.cs=pars, par.names=NULL, 
-											burnin=burnin, thin=thin))
-			} else e0.partraces.cs.plot(sim.dir=dir, country=country.pars$code, par.names=pars, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+											burnin=params[['burnin']], thin=params[['thin']]))
+			} else e0.partraces.cs.plot(sim.dir=params[['sim.dir']], country=country.pars$code, par.names=pars, 
+											nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		} else {
 			if(print.summary){if (mc.exist) print(summary(mcmc.set, country=country.pars$code, par.names=NULL, 
-											burnin=burnin, thin=thin))
-			} else e0.partraces.cs.plot(sim.dir=dir, country=country.pars$code, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+											burnin=params[['burnin']], thin=params[['thin']]))
+			} else e0.partraces.cs.plot(sim.dir=params[['sim.dir']], country=country.pars$code, nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		}
 	} else { # World-parameters
 		if (!all.pars) { # selected pars
 			pars <- svalue(e$par.dl)
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, par.names.cs=NULL, par.names=pars, 
-											burnin=burnin, thin=thin))
-			} else e0.partraces.plot(sim.dir=dir, par.names=pars, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+											burnin=params[['burnin']], thin=params[['thin']]))
+			} else e0.partraces.plot(sim.dir=params[['sim.dir']], par.names=pars, nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		} else { # all pars
 			if(print.summary) {if (mc.exist) print(summary(mcmc.set, par.names.cs=NULL, 
-											burnin=burnin, thin=thin))
-			} else e0.partraces.plot(sim.dir=dir, nr.points=nr.points, 
-											burnin=burnin, thin=thin)
+											burnin=params[['burnin']], thin=params[['thin']]))
+			} else e0.partraces.plot(sim.dir=params[['sim.dir']], nr.points=params[['nr.points']], 
+											burnin=params[['burnin']], thin=params[['thin']])
 		}
 	}
 	if(print.summary) {
