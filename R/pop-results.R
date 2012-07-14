@@ -40,6 +40,11 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 									horizontal=FALSE, container=g)
 	e$show.traj.country <- create.country.widget(country.f, defaults.traj.all, 
 									main.win, prediction=TRUE, parent.env=e)
+	#exp.g <- ggroup(horizontal=TRUE, container=country.f, expand=TRUE)
+	exp.g <- e$show.traj.country$country.lo
+	exp.g[5,1:3] <- gseparator(container=exp.g)
+	exp.g[6,1, anchor=leftcenter] <- glabel('Expression: ', container=exp.g)
+	exp.g[6,2:3] <- e$expression <- gedit('', container=exp.g, fill=TRUE, expand=TRUE)
 	lo <- .create.trajectories.settings.group(g, e, 
 				defaults=list(start.year=defaults.pred$start.year, end.year=defaults.pred$end.year,
 							half.child.variant=defaults.traj$half.child.variant,
@@ -65,15 +70,15 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	addSpring(button.g)
 	create.generate.script.button(handler=show.e0.traj, 
 				action=list(mw=main.win, env=e, type='plot', script=TRUE,
-							pred.type='pop', package='bayesPop'),
+							pred.type='pop', package='bayesPop', allow.null.country=TRUE),
 								container=button.g)
 	addSpace(button.g, 5)
 	TableB.show.traj.act <- gaction(label='Table', icon='dataframe', handler=show.e0.traj, 
 						action=list(mw=main.win, env=e, type='table', script=FALSE,
-											pred.type='pop', package='bayesPop'))
+											pred.type='pop', package='bayesPop', allow.null.country=TRUE))
 	GraphB.show.traj.act <- gaction(label='Graph', icon='lines', handler=show.e0.traj, 
 						action=list(mw=main.win, env=e, type='plot', script=FALSE,
-											pred.type='pop', package='bayesPop'))
+											pred.type='pop', package='bayesPop', allow.null.country=TRUE))
 	e$TableB.show.traj <- bDem.gbutton(action=TableB.show.traj.act, container=button.g)
 	bDem.gbutton(action=GraphB.show.traj.act, container=button.g)
 	enabled(e$TableB.show.traj) <- svalue(e$sum.over.ages)
@@ -88,7 +93,7 @@ add.aggregation.to.env <- function(e, ...) {
 }
 
 get.additional.pop.param <- function(e, script, type, ...) {
-	param.names <- list(text=c('sex'), logical=c('sum.over.ages', 'half.child.variant'))
+	param.names <- list(text=c('sex', 'expression'), logical=c('sum.over.ages', 'half.child.variant'))
 	add.aggregation.to.env(e)
 	non.widget.pars <- list(text='aggregation')
 	if (is.element(0, e$age) || e$age=='all') {
@@ -100,17 +105,27 @@ get.additional.pop.param <- function(e, script, type, ...) {
 	param <- c(get.parameters(param.names, env=e, quote=quote), 
 			get.parameters(non.widget.pars,
 					env=e, quote=quote, retrieve.from.widgets=FALSE))
-	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant', 'typical.trajectory'), 
-					 table=c('pi', 'country', 'sex', 'age', 'half.child.variant'),
-					 pred=c('aggregation'),
-					 pred.unquote=get.parameters(list(text='aggregation'), 
+	return(list(add=param, 
+			plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant', 'typical.trajectory', 'expression'), 
+			 table=c('pi', 'country', 'sex', 'age', 'half.child.variant', 'expression'),
+			 pred=c('aggregation'),
+			 pred.unquote=get.parameters(list(text='aggregation'), 
 					 				env=e, quote=FALSE, retrieve.from.widgets=FALSE),
-					 table.decimal=0))
+			table.decimal=2))
+}
+
+.pop.traj.country.check <- function(e) {
+	if(nchar(svalue(e$expression))<=0) {
+		gmessage('Country or expression must be specified.', title='Input Error',
+					icon='error')
+		return(FALSE)
+	}
+	return(TRUE)
 }
 
 assemble.pop.plot.cmd <- function(param, e, all=FALSE) {
 	all.suffix <- if(all) 'All' else ''
-	return(paste('pop.trajectories.plot', all.suffix, '(pred,',
+	return(paste(paste('pop.trajectories.plot', all.suffix, sep=''), '(pred,',
 				assemble.arguments(param, svalue(e$graph.pars)), ')'))
 }
 

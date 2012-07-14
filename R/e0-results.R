@@ -126,9 +126,15 @@ show.e0.traj <- function(h, ...) {
 	package <- if(is.null(h$action$package)) 'bayesLife' else h$action$package
 	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
 	show.type <- h$action$type
+	allow.null.country <- if(is.null(h$action$allow.null.country)) FALSE else h$action$allow.null.country
 	country.pars <- get.country.code.from.widget(e$show.traj.country$country.w, e$show.traj.country, 
-							force.country.spec=show.type!='plot')
-	if(is.null(country.pars)) return(NULL)
+							force.country.spec = show.type!='plot', allow.null.country=allow.null.country)
+	if(is.null(country.pars)) {
+		if(!allow.null.country) return(NULL)
+		else if(!do.call(paste('.', pred.type, '.traj.country.check', sep=''), list(e)))
+				 return(NULL)
+	}
+	draw.one.country <- is.null(country.pars$output.dir)
 	param.names.all <- list(text='sim.dir', numvector='pi', 
 							numeric=c('nr.traj', 'start.year', 'end.year'),
 							logical='typical.trajectory')
@@ -174,7 +180,7 @@ show.e0.traj <- function(h, ...) {
 	if (show.type == 'plot') {
 		param.plot1c <- param.env[add.param.names[['plot']][is.element(add.param.names[['plot']], names(param.env))]]
 		if(is.element('country', names(param.env))) param.plot1c <- c(param.plot1c, param.env['country'])
-		if(!is.null(param.env$country)) { # one country
+		if(draw.one.country) { # one country
 			cmd <- paste(cmd, do.call(paste('assemble.', pred.type, '.plot.cmd', sep=''), list(param.plot1c, e)), sep='')
 			if (h$action$script) {
 				create.script.widget(cmd, h$action$mw, package=package)

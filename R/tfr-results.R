@@ -355,6 +355,7 @@ create.country.widget <- function(parent, defaults=NULL, main.win=NULL, show.all
 					  width=39, quote=FALSE, container=g1)
 		enabled(e$all.output) <- FALSE
 	}
+	e$country.lo <- g1
 	return(e)	
 }
 
@@ -482,7 +483,7 @@ selectCountryMenu <- function(h, ...) {
 	
 
 
-get.country.code.from.widget <- function(country.widget, env, force.country.spec=FALSE) {
+get.country.code.from.widget <- function(country.widget, env, force.country.spec=FALSE, allow.null.country=FALSE) {
 	country <- svalue(country.widget)
 	country.selected <- TRUE
 	if (!is.null(env$all.countries.chb)) { 
@@ -491,8 +492,8 @@ get.country.code.from.widget <- function(country.widget, env, force.country.spec
 	if (force.country.spec) country.selected <- TRUE
 	if (country.selected) {
 		if (nchar(country)==0) {
-			gmessage('Country must be specified.', title='Input Error',
-					icon='error')
+			if(!allow.null.country)
+				gmessage('Country must be specified.', title='Input Error', icon='error')
 			return(NULL)
 		}
 		warn <- getOption('warn')
