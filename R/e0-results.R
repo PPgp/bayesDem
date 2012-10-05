@@ -54,15 +54,15 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 	lo[1,6] <- e$typical.trajectory <- gcheckbox('Typical trajectory', checked=defaults.traj$typical.trajectory, 
 								container=lo)
 	lo[3,1, anchor=leftcenter] <- "Type:"
-	lo[3,2] <- e$sex <- bDem.gdroplist(c('Female', 'Male', 'Both Marginal', 'Both Joint', 'Gap'), container=lo, selected=1,
+	lo[3,2] <- e$sex <- bDem.gdroplist(c('Female', 'Male', 'Average', 'Both Marginal', 'Both Joint', 'Gap'), container=lo, selected=1,
 				handler=function(h,...) {
 					if(svalue(h$obj) == 'Both Marginal') {svalue(e$nr.traj) <- 0; svalue(e$pi) <- 95}
 					if(svalue(h$obj) == 'Both Joint') {svalue(e$nr.traj) <- 500; svalue(e$pi) <- 95}
 					if(svalue(h$obj) == 'Gap') {svalue(e$nr.traj) <- 0; svalue(e$pi) <- '80, 95'}
 					if(is.element(svalue(h$obj), c('Female', 'Male'))) {svalue(e$nr.traj) <- 20; svalue(e$pi) <- '80, 95'}
-					enabled(e$TableB.show.traj) <- is.element(svalue(h$obj), c('Female', 'Male'))
+					enabled(e$TableB.show.traj) <- is.element(svalue(h$obj), c('Female', 'Male', 'Average'))
 					enabled(e$years) <- svalue(h$obj) == 'Both Joint'
-					enabled(e$typical.trajectory) <- is.element(svalue(h$obj), c('Female', 'Male', 'Both Marginal'))
+					enabled(e$typical.trajectory) <- is.element(svalue(h$obj), c('Female', 'Male', 'Average', 'Both Marginal'))
 				})
 	lo[3,3, anchor=leftcenter] <- glabel('Years:', container=lo)
 	lo[3,4] <- e$years <- gedit('2013, 2048, 2098', width=10, container=lo)
@@ -91,17 +91,17 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 
 get.additional.e0.param <- function(e, ...) {
 	sex <- svalue(e$sex)
-	param <- list(both.sexes= sex=='Both Marginal', joint.male= sex == 'Male')
+	param <- list(both.sexes= if(sex=='Average') 'A' else sex=='Both Marginal', joint.male= sex == 'Male')
 	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'both.sexes', 'typical.trajectory'), 
 					pred='joint.male', pred.unquote=param['joint.male'],
-					table=c('pi', 'country'), table.decimal=2))
+					table=c('pi', 'country', 'both.sexes'), table.decimal=2))
 }
 	
 
 assemble.e0.plot.cmd <- function(param, e, all=FALSE) {
 	plot.type <- svalue(e$sex)
 	all.suffix <- if(all) '.all' else ''
-	if(is.element(plot.type, c('Female', 'Male', 'Both Marginal'))) 
+	if(is.element(plot.type, c('Female', 'Male', 'Average', 'Both Marginal'))) 
 		return(paste('e0.trajectories.plot',all.suffix, '(pred,',
 				assemble.arguments(param, svalue(e$graph.pars)), ')', sep=''))
 	
@@ -257,7 +257,7 @@ e0.showMap <- function(h, ...) {
 	param.env <-list(sim.dir=svalue(e$sim.dir), quantile=quantile)
 	param.names1 <- list(text='sim.dir')
 	param.pred <- get.parameters(param.names1, env=param.env, quote=h$action$script, retrieve.from.widgets=FALSE)
-	same.scale <- svalue(e$map.same.scale)
+	same.scale <- svalue(e$same.scale)
 	par.name <- svalue(e$map.measure)
 	bounds <- svalue(e$map.bounds)
 	package <- svalue(e$map.package)

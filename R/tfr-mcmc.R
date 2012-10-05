@@ -673,7 +673,7 @@ mcmc.run.extra <- function(h, ...) {
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	params[['countries']] <- e$selected.extra.countries
 	if (h$action$script) {
-		cmd <- paste('run.tfr.mcmc.extra(', paste(paste(names(params), params, sep='='), collapse=', '), ',',
+		cmd <- paste('run.tfr.mcmc.extra(', paste(paste(names(params), params, sep='='), collapse=', '),
 											 ')',sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesTFR")
 	} else {

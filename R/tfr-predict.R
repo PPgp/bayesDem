@@ -216,7 +216,7 @@ run.tfr.prediction.extra <- function(h, ...)
 		.run.prediction(e, type='TFR', handler=get.tfr.prediction.status, option='bDem.TFRpred', 
 								call='tfr.predict.extra', params=params, 
 								sim.name='TFR extra prediction', main.win=h$action$mw,
-								interval=1000)
+								action=list(sb=e$statuslabel), interval=1000)
 	}
 }
 

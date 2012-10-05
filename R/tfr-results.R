@@ -124,11 +124,11 @@ create.trajectories.group <- function(g, parent.env, main.win) {
 	mlo[1:2,5] <- e$map.package <- gradio(c('rworldmap', 'googleVis'), horizontal = FALSE, 
 						handler=function(h, ...) {
 							enabled(e$map.bounds) <- svalue(h$obj) == 'googleVis';
-							enabled(e$map.same.scale) <- svalue(h$obj) == 'rworldmap'}, 
+							enabled(e$same.scale) <- svalue(h$obj) == 'rworldmap'}, 
 						container=mlo)
-	mlo[3,4:5] <- e$map.same.scale <- gcheckbox('Same scale for all maps', checked=TRUE, container=mlo)
+	mlo[3,4:5] <- e$same.scale <- gcheckbox('Same scale for all maps', checked=TRUE, container=mlo)
 	enabled(e$map.bounds) <- svalue(e$map.package) == 'googleVis'
-	enabled(e$map.same.scale) <- svalue(e$map.package) == 'rworldmap'
+	enabled(e$same.scale) <- svalue(e$map.package) == 'rworldmap'
 	return(mlo)
 }
 
@@ -150,7 +150,7 @@ create.maps.group <- function(g, e, main.win) {
 						action=list(mw=main.win, env=e, script=FALSE))
 	bDem.gbutton(action=GraphB.map, container=map.bg)
 	addHandlerChanged(e$map.measure, 
-					handler=function(h,...) enabled(e$map.same.scale) <- svalue(h$obj) == 'TFR')
+					handler=function(h,...) enabled(e$same.scale) <- svalue(h$obj) == 'TFR')
 }
 
 create.dlcurves.group <- function(g, parent.env, main.win) {
@@ -318,25 +318,24 @@ create.convergence.tab <- function(parent, sim.dir, type='tfr', package='bayesTF
 	bDem.gbutton(action=ComputeDiag, container=butg)	
 }
 
-create.country.widget <- function(parent, defaults=NULL, main.win=NULL, show.all=TRUE, 
+create.country.widget <- function(parent, defaults=NULL, main.win=NULL, glo = NULL, start.row=1, show.all=TRUE, 
 									prediction=FALSE, parent.env=NULL, disable.table.button=TRUE) {
 	e <- new.env()
 	e$parent.env <- parent.env
 	e$prediction <- prediction
 	leftcenter <- c(-1, 0)
 	rightcenter <- c(1, 0)
-	#g1 <- ggroup(horizontal=TRUE, container=parent)
-	g1 <- glayout(container=parent)
-	g1[1,1, anchor=leftcenter] <- glabel('Country:', container=g1)
-	#if(show.all) {glabel("<span color='red'>(*)</span>", markup=TRUE, container=g1)}
-	#else glabel("<span color='red'>*</span>", markup=TRUE, container=g1)
-	g1[1,2] <- e$country.w <- gedit(width=20, container=g1)
-	g1[1,3] <- e$country.select.b <- bDem.gbutton('Select', container=g1, handler=selectCountryMenu,
+	g1 <- if(is.null(glo)) glayout(container=parent) else glo
+	l <- start.row
+	g1[l,1, anchor=leftcenter] <- glabel('Country:', container=g1)
+	g1[l,2] <- e$country.w <- gedit(width=20, container=g1)
+	g1[l,3] <- e$country.select.b <- bDem.gbutton('Select', container=g1, handler=selectCountryMenu,
 								action=list(mw=main.win, text.widget=e$country.w, env=e))
 	if(show.all) {
-		g1[2,1:3] <- gseparator(container=g1)
-		#g2 <- ggroup(horizontal=TRUE, container=parent)
-		g1[3,1] <- e$all.countries.chb <- gcheckbox('All countries', checked=FALSE, container=g1,
+		l <- l+1
+		g1[l,1:3] <- gseparator(container=g1)
+		l <- l+1
+		g1[l,1] <- e$all.countries.chb <- gcheckbox('All countries', checked=FALSE, container=g1,
 									handler=function(h,...){
 										enabled(e$country.w) <- !svalue(h$obj)
 										enabled(e$country.select.b) <- !svalue(h$obj)
@@ -344,14 +343,12 @@ create.country.widget <- function(parent, defaults=NULL, main.win=NULL, show.all
 										enabled(e$all.output) <- svalue(h$obj)
 										if(disable.table.button) enabled(parent.env$TableB.show.traj) <- !svalue(h$obj)
 										})
-		#addSpace(g2, 15)
-		g1[3,2, anchor=rightcenter] <- glabel("Output type:", container=g1)
-		g1[3,3] <- e$all.type <- bDem.gdroplist(c('png', 'jpeg', 'pdf', 'tiff', 'bmp', 'postscript'), container=g1)
+		g1[l,2, anchor=rightcenter] <- glabel("Output type:", container=g1)
+		g1[l,3] <- e$all.type <- bDem.gdroplist(c('png', 'jpeg', 'pdf', 'tiff', 'bmp', 'postscript'), container=g1)
 		enabled(e$all.type) <- FALSE
-		#g3 <- ggroup(horizontal=TRUE, container=parent)
-		#addSpace(g3,7)
-		g1[4,1, anchor=leftcenter] <- glabel("Output directory:", container=g1)
-		g1[4,2:3] <- e$all.output <- bDem.gfilebrowse(eval(defaults$output.dir), type='selectdir', 
+		l <- l+1
+		g1[l,1, anchor=leftcenter] <- glabel("Output directory:", container=g1)
+		g1[l,2:3] <- e$all.output <- bDem.gfilebrowse(eval(defaults$output.dir), type='selectdir', 
 					  width=39, quote=FALSE, container=g1)
 		enabled(e$all.output) <- FALSE
 	}
@@ -539,7 +536,7 @@ showMap <- function(h, ...) {
 	param.env <-list(sim.dir=svalue(e$sim.dir), quantile=quantile)
 	param.names1 <- list(text='sim.dir')
 	param.pred <- get.parameters(param.names1, env=param.env, quote=h$action$script, retrieve.from.widgets=FALSE)
-	same.scale <- svalue(e$map.same.scale)
+	same.scale <- svalue(e$same.scale)
 	par.name <- svalue(e$map.measure)
 	bounds <- svalue(e$map.bounds)
 	package <- svalue(e$map.package)
@@ -581,12 +578,25 @@ showMap <- function(h, ...) {
 	}
 }
 
+tfr.get.time.info <- function(pred) {
+	meta <- pred$mcmc.set$meta
+	return(list(est.periods=bayesTFR:::get.tfr.periods(meta), 
+				proj.periods=bayesTFR:::get.prediction.periods(meta, pred$nr.projections+1),
+				proj.ind.func=bayesTFR:::get.predORest.year.index,
+				present.year=meta$present.year,
+				est.years=bayesTFR:::get.estimation.years(meta),
+				proj.years=bayesTFR:::get.all.prediction.years(pred)
+				))
+	
+}
+
+e0.get.time.info <- function(pred) return(tfr.get.time.info(pred))
 	
 create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvis=FALSE, title='', type='tfr', 
 											cw.main='', dpi=80) {
-	meta <- pred$mcmc.set$meta
-	est.periods <- bayesTFR:::get.tfr.periods(meta)
-	proj.periods <- bayesTFR:::get.prediction.periods(meta, pred$nr.projections+1)
+	time.info <- do.call(paste(type, '.get.time.info', sep=''), list(pred))
+	est.periods <- time.info$est.periods
+	proj.periods <- time.info$proj.periods
 	
 	newMap <- function(h, ...) {
 		if (!is.null(h$action$dev)) dev.set(h$action$dev)
@@ -595,26 +605,26 @@ create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvi
 	}
 	do.show.map <- function(projection.year, map.pars, update.control.win=TRUE) {
 		#is.median <- percentile == 'median'
-		ind.proj <- bayesTFR:::get.predORest.year.index(pred, projection.year)
+		ind.proj <- do.call(time.info$proj.ind.func, list(pred, projection.year))
 		#projection.index <- ind.proj['index']
 		is.projection <- ind.proj['is.projection']
 		if(update.control.win)
 			svalue(year.label) <- if(is.projection) 'Projection year:' else 'Estimation year:'
 		do.call(paste(type, '.map', if(is.gvis) '.gvis' else '', sep=''), 
-				c(map.pars, list(projection.year=projection.year #, main=main
+				c(map.pars, list(year=projection.year #, main=main
 					)))
 	}
 	close.map <- function(h, ...) dev.off(h$action$dev)
 	
 	if(is.gvis && !is.null(params[['par.name']])) {
-		do.show.map(meta$present.year, params, update.control.win=FALSE)
+		do.show.map(time.info$present.year, params, update.control.win=FALSE)
 		return(NULL)
 	}
 	lest.periods <- length(est.periods)
 	periods <- c(est.periods[-lest.periods], # remove the present period, otherwise doubled 
 				 proj.periods)
-	est.years <- bayesTFR:::get.estimation.years(meta)
-	years <- c(est.years[-lest.periods], bayesTFR:::get.all.prediction.years(pred))
+	est.years <- time.info$est.years
+	years <- c(est.years[-lest.periods], time.info$proj.years)
 	e <- new.env()
 	win <- bDem.gwindow(paste(title, 'Control Panel'), height=70, parent=parent, horizontal=FALSE)
 	g <- ggroup(container=win, horizontal=FALSE, expand=TRUE)
@@ -623,7 +633,7 @@ create.graphics.map.window <- function(parent, pred, params, percentile,  is.gvi
 	year.label <- glabel("Projection year:", container=g1)
 	proj.year <- gspinbutton(from= min(years), to=max(years), by=5, value=years[lest.periods], container=g1)
 	if(!is.null(params$par.name)) enabled(proj.year) <- FALSE
-	do.show.map(meta$present.year, params)
+	do.show.map(time.info$present.year, params)
 	if (!is.gvis) {
 		addSpring(g1)
 		glabel("Output type:", container=g1)

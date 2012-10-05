@@ -8,8 +8,6 @@ popResults.group <- function(g, main.win, parent) {
 	gg <-  ggroup(horizontal=FALSE, container=g, expand=TRUE)
 	aggr.g <- ggroup(horizontal=TRUE, container=gg)
 	addSpring(aggr.g)
-	glabel('Aggregation method:', container=aggr.g)
-	e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=aggr.g)
 	nb <- bDem.gnotebook(container=gg, expand=TRUE)
 	traj.g <- ggroup(label="<span color='#0B6138'>Population trajectories</span>", 
 							markup=TRUE, horizontal=FALSE, container=nb)
@@ -17,9 +15,9 @@ popResults.group <- function(g, main.win, parent) {
 	pyr.g <- ggroup(label="<span color='#0B6138'>Population pyramid</span>", 
 							markup=TRUE, horizontal=FALSE, container=nb)
 	pyr.env <- pop.show.pyramid.group(pyr.g, main.win, e)
-#	map.g <- ggroup(label="<span color='#0B6138'>Pop world maps</span>", 
-#							markup=TRUE, horizontal=FALSE, container=nb)
-#	map.env <- pop.show.map.group(map.g, main.win, e)
+	map.g <- ggroup(label="<span color='#0B6138'>Pop world maps</span>", 
+							markup=TRUE, horizontal=FALSE, container=nb)
+	map.env <- pop.show.map.group(map.g, main.win, e)
 
 	svalue(nb) <- 1
 }
@@ -30,7 +28,6 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'pop'
 	e$prior.select.countries.function <- 'add.aggregation.to.env'
-	e$aggregation.dl <- parent.env$aggregation.dl
 	e$new.country.select.if.changed <- c('aggregation.dl')
 	defaults.pred <- formals(pop.predict)
 	defaults.traj <- formals(pop.trajectories.plot)
@@ -38,13 +35,24 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	addSpace(g, 10)	
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
+	glo <- glayout(container=country.f)
+	glo[1,1, anchor=leftcenter] <- 'Aggregation method:'
+	glo[1,2] <- e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
 	e$show.traj.country <- create.country.widget(country.f, defaults.traj.all, 
-									main.win, prediction=TRUE, parent.env=e)
-	#exp.g <- ggroup(horizontal=TRUE, container=country.f, expand=TRUE)
+									main.win, glo=glo, start.row=2, prediction=TRUE, parent.env=e)
+	l <- 2+4
 	exp.g <- e$show.traj.country$country.lo
-	exp.g[5,1:3] <- gseparator(container=exp.g)
-	exp.g[6,1, anchor=leftcenter] <- glabel('Expression: ', container=exp.g)
-	exp.g[6,2:3] <- e$expression <- gedit('', container=exp.g, fill=TRUE, expand=TRUE)
+	exp.g[l,1:3] <- gseparator(container=exp.g)
+	exp.g[l+1,1] <- gcheckbox('Expression: ', container=exp.g, checked=FALSE, 
+						handler=function(h,...){
+							enabled(e$expression) <- svalue(h$obj)
+							enabled(e$show.traj.country$country.w) <- !svalue(h$obj)
+							enabled(e$show.traj.country$country.select.b) <- !svalue(h$obj)
+							})
+	exp.g[l+1,2:3] <- e$expression <- gedit('', container=exp.g, fill=TRUE, expand=TRUE)
+	enabled(e$expression) <- FALSE
+	addSpace(g, 10)
+	
 	lo <- .create.trajectories.settings.group(g, e, 
 				defaults=list(start.year=defaults.pred$start.year, end.year=defaults.pred$end.year,
 							half.child.variant=defaults.traj$half.child.variant,
@@ -147,7 +155,6 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	e$pred.type <- 'pop'
 	e$prior.select.countries.function <- 'add.aggregation.to.env'
 	e$new.country.select.if.changed <- c('aggregation.dl')
-	e$aggregation.dl <- parent.env$aggregation.dl
 	defaults.pred <- formals(pop.predict)
 	defaults.pyr <- formals(bayesPop:::pop.pyramid.bayesPop.prediction)
 	defaults.pyr.all <- formals(pop.pyramidAll)
@@ -156,8 +163,11 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	addSpace(g, 10)
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
 									horizontal=FALSE, container=g)
+	glo <- glayout(container=country.f)
+	glo[1,1, anchor=leftcenter] <- 'Aggregation method:'
+	glo[1,2] <- e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
 	e$show.pyr.country <- create.country.widget(country.f, defaults.pyr.all, 
-									main.win, prediction=TRUE, parent.env=e, disable.table.button=FALSE)
+									main.win, glo=glo, start.row=2, prediction=TRUE, parent.env=e, disable.table.button=FALSE)
 	addSpace(g, 10)
 	type.settings.f <- gframe("<span color='blue'>Pyramid settings</span>", markup=TRUE, 
 								horizontal=FALSE, container=g)
@@ -278,7 +288,7 @@ selectAgeMenuPop <- function(h, ...) {
 		h$action$env$age <- if (is.element(0, age)) 'all' else age 
 		visible(h$action$env$age.sel.win) <- FALSE
 		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) 
-			svalue(h$action$env[[h$action$label.widget.name]]) <- if (h$action$env$age == 'all') '' 
+			svalue(h$action$env[[h$action$label.widget.name]]) <- if (h$action$env$age[1] == 'all') '' 
 										else paste(bayesPop:::get.age.labels(h$action$env$age, collapse=TRUE, age.is.index=TRUE), 
 																		collapse=',')
 	}
@@ -353,4 +363,88 @@ selectYearsMenuPop <- function(h, ...) {
 	h$action$env$year.ok.handler[[w]] <- addhandlerclicked(
 						h$action$env$year.okbutton[[w]], handler=year.selected)
 
+}
+
+pop.show.map.group <- function(g, main.win, parent.env) {
+	leftcenter <- c(-1, 0)
+	e <- new.env()
+	e$sim.dir <- parent.env$sim.dir
+	addSpace(g, 10)
+	lo <- .create.map.settings.group(g, e, measures=c('Population', 'Expression'))
+	lo[4, 1, anchor=leftcenter] <- "Sex:"
+	lo[4, 2] <- e$sex <- bDem.gdroplist(c('Both', 'Female', 'Male'), container=lo, selected=1)
+	lo[4, 4] <- age.gb <- bDem.gbutton(" Age ", container=lo,
+				handler=selectAgeMenuPop,
+				action=list(mw=main.win, env=e, multiple=TRUE, label.widget.name='age.label'))
+	e$age <- 'all'
+	lo[4,5, anchor=leftcenter] <- e$age.label <- glabel('', container=lo)
+	lo[5, 1, anchor=leftcenter] <- "Expression:"
+	lo[5, 2:5] <- e$expression <- gedit('', container=lo)
+	addHandlerChanged(e$map.measure, function(h, ...) {
+					is.expression <- svalue(h$obj) == 'Expression'
+					enabled(e$expression) <- is.expression
+					enabled(e$sex) <- !is.expression
+					enabled(age.gb) <- !is.expression
+					})
+	enabled(e$expression) <- FALSE
+	addSpring(g)
+	bg <- ggroup(horizontal=TRUE, container=g)
+	create.help.button(topic='pop.map', package='bayesPop', parent.group=bg,
+						parent.window=main.win)
+	addSpring(bg)
+	create.generate.script.button(handler=pop.showMap, action=list(mw=main.win, env=e, script=TRUE),
+								container=bg)
+	addSpace(bg, 5)
+	GraphB.map <- gaction(label=' Show Map ', handler=pop.showMap, 
+						action=list(mw=main.win, env=e, script=FALSE))
+	bDem.gbutton(action=GraphB.map, container=bg)
+}
+
+pop.showMap <- function(h, ...) {
+	e <- h$action$env
+	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
+	param.names1 <- list(text='sim.dir')
+	param.pred <- get.parameters(param.names1, env=e, quote=h$action$script)
+	param.names.rest <- list(text=c('sex', 'expression'))
+	param.rest <- get.parameters(param.names.rest, env=e, quote=h$action$script)
+	param.rest2 <- get.parameters(list(logical=c('same.scale')), env=e, quote=h$action$script)
+	if(svalue(e$map.measure) != 'Expression') param.rest$expression <- NULL
+	param.rest$sex <- tolower(param.rest$sex)
+	param.rest$age <- e$age
+	percentile <- svalue(e$map.percentile)
+	param.rest$quantile <- e$percentiles[[percentile]]
+	bounds <- svalue(e$map.bounds)
+	package <- svalue(e$map.package)
+	map.function <- if(package == 'rworldmap') 'pop.map' else 'pop.map.gvis'
+	if(h$action$script) {
+		cmd <- paste('pred <- get.pop.prediction(', assemble.arguments(param.pred), ')\n', sep='')
+		if(package == 'rworldmap') {
+			cmd <- paste(cmd, "param.map <- get.pop.map.parameters(pred, ", 
+						assemble.arguments(c(param.rest, param.rest2)), ")\n", sep="")
+			cmd <- paste(cmd, 'do.call("', map.function, '", param.map)', sep='')
+		} else {
+			cmd <- paste(cmd, map.function, '(pred, ', assemble.arguments(c(param.rest, list(pi=bounds))), ')', sep='')
+		}
+		create.script.widget(cmd, h$action$mw, package="bayesPop")
+	} else {
+		pred <- do.call('get.pop.prediction', param.pred)
+		param.map <-  if (package == 'rworldmap') do.call('get.pop.map.parameters', c(list(pred), param.rest, param.rest2))
+						else c(list(pred=pred), param.rest)
+		if(package == 'rworldmap') param.map[['device']] <- 'dev.new'
+		if (package == 'googleVis') param.map[['pi']] <- bounds
+		g <- create.graphics.map.window(parent=h$action$mw, pred=pred, params=param.map, percentile=percentile, 
+										is.gvis= package == 'googleVis', title="World Map", type='pop', 
+										cw.main=paste(.map.main.default(pred, param.map), param.rest$quantile))
+	}
+}
+
+pop.get.time.info <- function(pred) {
+	return(list(est.periods=bayesPop:::get.pop.observed.periods(pred), 
+				proj.periods=bayesPop:::get.pop.prediction.periods(pred),
+				proj.ind.func=bayesPop:::get.predORobs.year.index,
+				present.year=pred$proj.years[1],
+				est.years=pred$estim.years,
+				proj.years=pred$proj.years
+				))
+	
 }
