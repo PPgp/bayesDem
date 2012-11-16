@@ -98,9 +98,7 @@ e0mcmc.run <- function(h, ...) {
 	}
 
 	if (h$action$script) {
-		commands <- paste('m <- run.e0.mcmc(', paste(paste(names(params), params, sep='='), collapse=', '), ',',
-					paste(paste(names(e$params), e$params, sep='='), collapse=', '),
-											 ')',sep=' ')
+		commands <- paste('m <- run.e0.mcmc(', assemble.arguments(c(params, e$params)), ')',sep=' ')
 		if(run.auto && e$run.prediction) {
 			commands <- paste(commands, '\n\ne0.predict(m, use.diagnostics=TRUE)', sep='')
 			#commands <- paste(commands, '\n\ne0.predict(m)', sep='')
@@ -167,12 +165,12 @@ e0mcmc.run.extra <- function(h, ...) {
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	params[['countries']] <- e$selected.extra.countries
 	if (h$action$script) {
-		cmd <- paste('run.e0.mcmc.extra(', paste(paste(names(params), params, sep='='), collapse=', '), ',',
-											 ')', sep=' ')
+		cmd <- paste('run.e0.mcmc.extra(', assemble.arguments(params), ')', sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesLife")
 	} else {
 		.run.simulation(e, handler=get.e0.simulation.extra.status, option='bDem.e0mcmcExtra', 
 								call='run.e0.mcmc.extra', params=params, 
+								action=list(sb=e$statuslabel),
 								sim.name='e0 MCMC extra simulation', main.win=h$action$mw,
 								interval=1000)
 	}

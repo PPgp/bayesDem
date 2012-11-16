@@ -1,3 +1,11 @@
+2.0-0 (10/12/2012)
+-----
+Many internal changes.
+
+Appearance changed (color, GUI blocks, etc.)
+
+Status bar added to tabs that launch time expensive processes. 
+
 1.7-0 (06/06/2012)
 -----
 In the Population Projection tab - results - pyramids: Modified to reflect changes in the bayesPop

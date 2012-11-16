@@ -129,9 +129,7 @@ mcmc.run <- function(h, ...) {
 	}
 
 	if (h$action$script) {
-		commands <- paste('m <- run.tfr.mcmc(', paste(paste(names(params), params, sep='='), collapse=', '), ',',
-					paste(paste(names(e$params), e$params, sep='='), collapse=', '),
-											 ')',sep=' ')
+		commands <- paste('m <- run.tfr.mcmc(', assemble.arguments(c(params, e$params)), ')', sep=' ')
 		if(run.auto && e$run.prediction) 
 			commands <- paste(commands, '\n\ntfr.predict(m, use.diagnostics=TRUE)', sep='')
 		create.script.widget(commands, h$action$mw, package="bayesTFR")
@@ -673,12 +671,12 @@ mcmc.run.extra <- function(h, ...) {
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	params[['countries']] <- e$selected.extra.countries
 	if (h$action$script) {
-		cmd <- paste('run.tfr.mcmc.extra(', paste(paste(names(params), params, sep='='), collapse=', '),
-											 ')',sep=' ')
+		cmd <- paste('run.tfr.mcmc.extra(', assemble.arguments(params), ')',sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesTFR")
 	} else {
 		.run.simulation(e, handler=get.tfr.simulation.extra.status, option='bDem.TFRmcmcExtra', 
 								call='run.tfr.mcmc.extra', params=params, 
+								action=list(sb=e$statuslabel),
 								sim.name='TFR MCMC extra simulation', main.win=h$action$mw,
 								interval=1000)
 	}

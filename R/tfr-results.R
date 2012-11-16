@@ -513,7 +513,7 @@ get.additional.tfr.param <- function(e, ...) {
 	hchv <- svalue(e$half.child.variant)
 	return(list(add=list(half.child.variant=hchv), 
 				plot=c('pi', 'xlim', 'nr.traj', 'half.child.variant', 'typical.trajectory'), 
-				table=c('pi', 'country'), table.decimal=2))
+				table=c('pi', 'country', 'half.child.variant'), table.decimal=2))
 }
 	
 assemble.tfr.plot.cmd <- function(param, e, all=FALSE) {
@@ -525,7 +525,14 @@ get.tfr.table.title <- function(country, pred, ...)
 	return (country)
 
 tfr.get.trajectories.table.values <- function(pred, param, ...) {
-	return(do.call('tfr.trajectories.table', c(list(pred), param)))
+	t <- do.call('tfr.trajectories.table', c(list(pred), param))
+	# change the column names, otherwise gtable will prefix an 'X'
+	tend <- ncol(t)
+	if(param$half.child.variant) tend <- tend-2
+	colnames(t)[2:tend] <- paste('q', colnames(t)[2:tend], sep='')
+	if(param$half.child.variant)
+		colnames(t)[(tend+1):(tend+2)] <- c('minus0.5child', 'plus0.5child')
+	return(t)
 }
 
 showMap <- function(h, ...) {

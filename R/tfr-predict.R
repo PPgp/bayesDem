@@ -109,8 +109,7 @@ run.tfr.prediction <- function(h, ...)
 	}
 
 	if (h$action$script) {
-		cmd <- paste('tfr.predict(', paste(paste(names(params), params, sep='='), collapse=', '),
-											 ')', sep=' ')
+		cmd <- paste('tfr.predict(', assemble.arguments(params), ')', sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesTFR")
 	} else {
 		if(params$use.diagnostics) {
@@ -209,8 +208,7 @@ run.tfr.prediction.extra <- function(h, ...)
 	params[['countries']] <- if(svalue(e$all.countries)) NULL else e$selected.countries
 	
 	if (h$action$script) {
-		cmd <- paste('tfr.predict.extra(', paste(paste(names(params), params, sep='='), collapse=', '),
-											 ')',sep=' ')
+		cmd <- paste('tfr.predict.extra(', assemble.arguments(params), ')',sep=' ')
 		create.script.widget(cmd, h$action$mw, package="bayesTFR")
 	} else {
 		.run.prediction(e, type='TFR', handler=get.tfr.prediction.status, option='bDem.TFRpred', 

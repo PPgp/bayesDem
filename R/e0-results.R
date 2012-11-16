@@ -116,7 +116,10 @@ assemble.e0.plot.cmd <- function(param, e, all=FALSE) {
 }
 
 e0.get.trajectories.table.values <- function(pred, param, ...) {
-	return(do.call('e0.trajectories.table', c(list(pred), param)))
+	t <- do.call('e0.trajectories.table', c(list(pred), param))
+	# change the column names, otherwise gtable will prefix an 'X'
+	colnames(t)[2:ncol(t)] <- paste('q', colnames(t)[2:ncol(t)], sep='')
+	return(t)
 }
 
 
