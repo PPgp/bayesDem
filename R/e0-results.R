@@ -59,7 +59,7 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 					if(svalue(h$obj) == 'Both Marginal') {svalue(e$nr.traj) <- 0; svalue(e$pi) <- 95}
 					if(svalue(h$obj) == 'Both Joint') {svalue(e$nr.traj) <- 500; svalue(e$pi) <- 95}
 					if(svalue(h$obj) == 'Gap') {svalue(e$nr.traj) <- 0; svalue(e$pi) <- '80, 95'}
-					if(is.element(svalue(h$obj), c('Female', 'Male'))) {svalue(e$nr.traj) <- 20; svalue(e$pi) <- '80, 95'}
+					if(is.element(svalue(h$obj), c('Female', 'Male', 'Average'))) {svalue(e$nr.traj) <- 20; svalue(e$pi) <- '80, 95'}
 					enabled(e$TableB.show.traj) <- is.element(svalue(h$obj), c('Female', 'Male', 'Average'))
 					enabled(e$years) <- svalue(h$obj) == 'Both Joint'
 					enabled(e$typical.trajectory) <- is.element(svalue(h$obj), c('Female', 'Male', 'Average', 'Both Marginal'))
@@ -91,7 +91,7 @@ e0.show.trajectories.group <- function(g, main.win, parent.env) {
 
 get.additional.e0.param <- function(e, ...) {
 	sex <- svalue(e$sex)
-	param <- list(both.sexes= if(sex=='Average') 'A' else sex=='Both Marginal', joint.male= sex == 'Male')
+	param <- list(both.sexes= if(sex=='Average') "'A'" else sex=='Both Marginal', joint.male= sex == 'Male')
 	return(list(add=param, plot=c('pi', 'xlim', 'nr.traj', 'both.sexes', 'typical.trajectory'), 
 					pred='joint.male', pred.unquote=param['joint.male'],
 					table=c('pi', 'country', 'both.sexes'), table.decimal=2))
