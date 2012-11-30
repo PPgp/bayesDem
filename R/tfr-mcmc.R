@@ -732,6 +732,7 @@ multiSelectCountryMenu <- function(h, ...) {
 		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) {
 			svalue(h$action$env[[h$action$label.widget.name]]) <- paste(h$action$env$selected.extra.countries, collapse=',')
 		}
+		if(length(h$action$env$selected.extra.countries) == 0) h$action$env$selected.extra.countries <- NULL
 	}
 	new.window <- TRUE
 	if (!is.null(h$action$env$extra.country.sel.win)) {

@@ -27,7 +27,6 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'pop'
-	e$prior.select.countries.function <- 'add.aggregation.to.env'
 	e$new.country.select.if.changed <- c('aggregation.dl')
 	defaults.pred <- formals(pop.predict)
 	defaults.traj <- formals(pop.trajectories.plot)
@@ -37,17 +36,27 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 									horizontal=FALSE, container=g)
 	glo <- glayout(container=country.f)
 	glo[1,1, anchor=leftcenter] <- 'Aggregation method:'
-	glo[1,2] <- e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
+	glo[1,2] <- e$aggregation.dl <- bDem.gbutton(" None ", container=glo,
+				handler=selectAggregationMenuPop,
+				action=list(mw=main.win, env=e, label.widget.name='aggregation.dl'))
+	e$aggregation <- NULL
+	#bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
 	e$show.traj.country <- create.country.widget(country.f, defaults.traj.all, 
 									main.win, glo=glo, start.row=2, prediction=TRUE, parent.env=e)
 	l <- 2+4
 	exp.g <- e$show.traj.country$country.lo
 	exp.g[l,1:3] <- gseparator(container=exp.g)
-	exp.g[l+1,1] <- gcheckbox('Expression: ', container=exp.g, checked=FALSE, 
+	exp.g[l+1,1] <- e$use.expression <- gcheckbox('Expression: ', container=exp.g, checked=FALSE, 
 						handler=function(h,...){
-							enabled(e$expression) <- svalue(h$obj)
-							enabled(e$show.traj.country$country.w) <- !svalue(h$obj)
-							enabled(e$show.traj.country$country.select.b) <- !svalue(h$obj)
+							use.expr <- svalue(h$obj)
+							enabled(e$expression) <- use.expr
+							enabled(e$show.traj.country$country.w) <- !use.expr
+							enabled(e$show.traj.country$country.select.b) <- !use.expr
+							enabled(e$sex) <- !use.expr
+							enabled(e$sum.over.ages) <- !use.expr
+							enabled(e$age.gb) <- !use.expr
+							enabled(e$half.child.variant) <- !use.expr
+							e$set.country.to.null <- use.expr
 							})
 	exp.g[l+1,2:3] <- e$expression <- gedit('', container=exp.g, fill=TRUE, expand=TRUE)
 	enabled(e$expression) <- FALSE
@@ -62,9 +71,23 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 	lo[1,3:4] <- e$sum.over.ages <- gcheckbox("Sum over ages", container=lo, checked=TRUE,
 							handler=function(h,...){
 								enabled(e$TableB.show.traj) <- svalue(h$obj)})
-	lo[1,6] <- age.gb <- bDem.gbutton(" Age ", container=lo,
+	lo[1,6] <- e$age.gb <- bDem.gbutton(" Age ", container=lo,
 				handler=selectAgeMenuPop,
 				action=list(mw=main.win, env=e, multiple=TRUE, label.widget.name='age.label'))
+	lo[4,1:2] <- e$plot.by.age <- gcheckbox("Plot by age", container=lo, checked=FALSE,
+							handler=function(h,...){
+								by.age <- svalue(h$obj)
+								enabled(e$sum.over.ages) <- !by.age
+								enabled(e$age.gb) <- !by.age
+								enabled(e$start.year) <- !by.age
+								enabled(e$end.year) <- !by.age
+								enabled(e$year) <- by.age
+								if(by.age) enable(e$TableB.show.traj) <- TRUE
+								else enable(e$TableB.show.traj) <- e$sum.over.ages 
+								})
+	lo[4,3, anchor=leftcenter] <- glabel('Year:', container=lo)
+	lo[4,4] <- e$year <- gedit('', width=4, container=lo)
+	enabled(e$year) <- FALSE
 	e$age <- 'all'
 	lo[1,7, anchor=leftcenter] <- e$age.label <- glabel('', container=lo)
 	addSpace(g, 10)
@@ -94,29 +117,32 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 
 }
 
-add.aggregation.to.env <- function(e, ...) {
-	aggr <- svalue(e$aggregation.dl)	
-	if(aggr != 'None') e$aggregation <- aggr
-	else e$aggregation <- NULL
-}
 
 get.additional.pop.param <- function(e, script, type, ...) {
-	param.names <- list(text=c('sex', 'expression'), logical=c('sum.over.ages', 'half.child.variant'))
-	add.aggregation.to.env(e)
+	param.names <- list(text=c('sex', 'expression'), logical=c('sum.over.ages', 'half.child.variant'), numeric='year')
 	non.widget.pars <- list(text='aggregation')
 	if (is.element(0, e$age) || e$age=='all') {
 		non.widget.pars$text <- c(non.widget.pars$text, 'age')
 		e$age <- 'all'
-	} else non.widget.pars <- list(numeric='age')
+	}
 	quote <- if(type=='table') script else TRUE
 	
 	param <- c(get.parameters(param.names, env=e, quote=quote), 
 			get.parameters(non.widget.pars,
 					env=e, quote=quote, retrieve.from.widgets=FALSE))
+	if(!is.element('age', names(param))) param[['age']] <- e$age # if age is not all it is a vector
+	delete.pars <- c()
+	if(!svalue(e$use.expression)) delete.pars <- c(delete.pars, 'expression')
+	else  # disable if using expression
+		delete.pars <- c(delete.pars, c('sex', 'sum.over.ages', 'half.child.variant', 'age'))
+	if(svalue(e$plot.by.age)) delete.pars <- c(delete.pars, c('sum.over.ages', 'age', 'start.year', 'end.year'))
+	else delete.pars <- c(delete.pars, 'year')
 	return(list(add=param, 
-			plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant', 'typical.trajectory', 'expression'), 
-			 table=c('pi', 'country', 'sex', 'age', 'half.child.variant', 'expression'),
+			plot=c('pi', 'xlim', 'nr.traj', 'sex', 'age', 'sum.over.ages', 'half.child.variant', 
+						'typical.trajectory', 'expression', 'year'), 
+			 table=c('pi', 'country', 'sex', 'age', 'half.child.variant', 'expression', 'year'),
 			 pred=c('aggregation'),
+			 delete=delete.pars,
 			 pred.unquote=get.parameters(list(text='aggregation'), 
 					 				env=e, quote=FALSE, retrieve.from.widgets=FALSE),
 			table.decimal=2))
@@ -133,7 +159,8 @@ get.additional.pop.param <- function(e, script, type, ...) {
 
 assemble.pop.plot.cmd <- function(param, e, all=FALSE) {
 	all.suffix <- if(all) 'All' else ''
-	return(paste(paste('pop.trajectories.plot', all.suffix, sep=''), '(pred,',
+	cmd <- if(svalue(e$plot.by.age)) 'pop.byage.plot' else 'pop.trajectories.plot'
+	return(paste(paste(cmd, all.suffix, sep=''), '(pred,',
 				assemble.arguments(param, svalue(e$graph.pars)), ')'))
 }
 
@@ -144,8 +171,12 @@ get.pop.table.title <- function(country, pred, e) {
 	return (title)
 }
 
-pop.get.trajectories.table.values <- function(pred, param, ...) {
-	return(do.call('pop.trajectories.table', c(list(pred), param)))
+pop.get.trajectories.table.values <- function(pred, param, e, ...) {
+	cmd <- if(svalue(e$plot.by.age)) 'pop.byage.table' else 'pop.trajectories.table'
+	t <- do.call(cmd, c(list(pred), param))
+	# change the column names, otherwise gtable will prefix an 'X'
+	colnames(t)[2:ncol(t)] <- paste('q', colnames(t)[2:ncol(t)], sep='')
+	return(t)
 }
 
 pop.show.pyramid.group <- function(g, main.win, parent.env) {
@@ -153,7 +184,6 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'pop'
-	e$prior.select.countries.function <- 'add.aggregation.to.env'
 	e$new.country.select.if.changed <- c('aggregation.dl')
 	defaults.pred <- formals(pop.predict)
 	defaults.pyr <- formals(bayesPop:::pop.pyramid.bayesPop.prediction)
@@ -165,7 +195,10 @@ pop.show.pyramid.group <- function(g, main.win, parent.env) {
 									horizontal=FALSE, container=g)
 	glo <- glayout(container=country.f)
 	glo[1,1, anchor=leftcenter] <- 'Aggregation method:'
-	glo[1,2] <- e$aggregation.dl <- bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
+	glo[1,2] <- e$aggregation.dl <- bDem.gbutton(" None ", container=glo,
+				handler=selectAggregationMenuPop,
+				action=list(mw=main.win, env=e, label.widget.name='aggregation.dl'))
+	#bDem.gdroplist(c('None', 'independence', 'regional'), container=glo)
 	e$show.pyr.country <- create.country.widget(country.f, defaults.pyr.all, 
 									main.win, glo=glo, start.row=2, prediction=TRUE, parent.env=e, disable.table.button=FALSE)
 	addSpace(g, 10)
@@ -214,7 +247,6 @@ show.pop.pyramid <- function(h, ...) {
 	param.names.all <- list(text='sim.dir', numvector=c('pi', 'year', 'year.comp'), 
 							numeric='age', logical=c('proportion'))
 	if(traj.pyramid) param.names.all$numeric <- c(param.names.all$numeric, 'nr.traj')
-	add.aggregation.to.env(e)
 	param.env <- get.parameters(param.names.all, env=e, quote=h$action$script)
 	param.env.rest <- list(country=country.pars$code, output.dir=country.pars$output.dir,
 							output.type=country.pars$output.type, verbose=TRUE, aggregation=e$aggregation)
@@ -365,6 +397,50 @@ selectYearsMenuPop <- function(h, ...) {
 
 }
 
+selectAggregationMenuPop <- function(h, ...) {
+	aggr.selected <- function(h1, ...) {
+		aggr <- h$action$env$aggregation <- as.character(svalue(h$action$env$aggr.gt))	
+		visible(h$action$env$aggr.sel.win) <- FALSE
+		if(!is.null(h$action$label.widget.name) && !is.null(h$action$env[[h$action$label.widget.name]])) 
+			svalue(h$action$env[[h$action$label.widget.name]]) <- aggr
+		if(aggr == 'None') h$action$env$aggregation <- NULL
+	}
+	if (!is.null(h$action$env$aggr.sel.win)) 
+		visible(h$action$env$aggr.sel.win) <- TRUE
+	else {
+		if(!has.required.arguments(list(sim.dir='Simulation directory'), env=h$action$env)) return()
+		param <-list(sim.dir=svalue(h$action$env$sim.dir))
+		pred <- do.call('get.pop.prediction', param)
+		if(is.null(pred)) {
+			gmessage('Simulation directory contains no valid population projection.', 
+						title='Input Error', icon='error')
+        	return(NULL)
+		}
+		h$action$env$aggr.table <- data.frame(Name=c('None', bayesPop:::available.pop.aggregations(pred)))
+		h$action$env$aggr.sel.win <- win <- gwindow('Select aggregation', 
+							parent=h$action$mw, height=450, width=200,
+							handler=function(h, ...) {
+								h$action$env$aggr.sel.win<-NULL;
+								h$action$env$aggr.ok.handler <- NULL
+							},
+							action=list(env=h$action$env))
+		t.group <- ggroup(horizontal=FALSE, container=win)
+		h$action$env$aggr.gt <- gtable(h$action$env$aggr.table, container=t.group, 
+					expand=TRUE, multiple=FALSE, handler=aggr.selected)
+		b.group <- ggroup(horizontal=TRUE, container=t.group)
+		gbutton('Cancel', container=b.group, handler=function(h, ...) 
+					visible(win) <- FALSE)
+		addSpring(b.group)
+		h$action$env$aggr.okbutton <- gbutton('OK', container=b.group)
+	}
+	if(!is.null(h$action$env$aggr.ok.handler)) 
+		removehandler(h$action$env$aggr.okbutton, h$action$env$aggr.ok.handler)
+	h$action$env$aggr.ok.handler <- addhandlerclicked(
+						h$action$env$aggr.okbutton, handler=aggr.selected)
+
+}
+
+
 pop.show.map.group <- function(g, main.win, parent.env) {
 	leftcenter <- c(-1, 0)
 	e <- new.env()
@@ -407,10 +483,14 @@ pop.showMap <- function(h, ...) {
 	param.pred <- get.parameters(param.names1, env=e, quote=h$action$script)
 	param.names.rest <- list(text=c('sex', 'expression'))
 	param.rest <- get.parameters(param.names.rest, env=e, quote=h$action$script)
+	param.rest$age <- if (is.element(0, e$age) || e$age=='all') 
+		get.parameters(list(text='age'), env=e, retrieve.from.widgets=FALSE, quote=h$action$script)$age
+					 else e$age 
 	param.rest2 <- get.parameters(list(logical=c('same.scale')), env=e, quote=h$action$script)
-	if(svalue(e$map.measure) != 'Expression') param.rest$expression <- NULL
 	param.rest$sex <- tolower(param.rest$sex)
-	param.rest$age <- e$age
+	if(svalue(e$map.measure) != 'Expression') param.rest$expression <- NULL
+	else for(par in c('sex', 'age')) param.rest[[par]] <- NULL
+	
 	percentile <- svalue(e$map.percentile)
 	param.rest$quantile <- e$percentiles[[percentile]]
 	bounds <- svalue(e$map.bounds)

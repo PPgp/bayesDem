@@ -130,7 +130,9 @@ show.e0.traj <- function(h, ...) {
 	if(!has.required.arguments(list(sim.dir='Simulation directory'), env=e)) return()
 	show.type <- h$action$type
 	allow.null.country <- if(is.null(h$action$allow.null.country)) FALSE else h$action$allow.null.country
-	country.pars <- get.country.code.from.widget(e$show.traj.country$country.w, e$show.traj.country, 
+	country.pars <- NULL
+	if(is.null(h$action$env$set.country.to.null) || !h$action$env$set.country.to.null)
+		country.pars <- get.country.code.from.widget(e$show.traj.country$country.w, e$show.traj.country, 
 							force.country.spec = show.type!='plot', allow.null.country=allow.null.country)
 	if(is.null(country.pars)) {
 		if(!allow.null.country) return(NULL)
@@ -170,6 +172,8 @@ show.e0.traj <- function(h, ...) {
 	} else {	
 		cmd <- ''
 	}
+	if(!is.null(add.param.names$delete))
+		for(par in add.param.names$delete) param.env[[par]] <- NULL
 	xmin <- param.env$start.year
 	xmax <- param.env$end.year
 	if(!is.null(xmin) || !is.null(xmax)) {
@@ -188,7 +192,8 @@ show.e0.traj <- function(h, ...) {
 			if (h$action$script) {
 				create.script.widget(cmd, h$action$mw, package=package)
 			} else {
-				create.graphics.window(parent=h$action$mw, title=paste("Trajectories for", country.pars$name))
+				create.graphics.window(parent=h$action$mw, title=paste("Trajectories", 
+							if(!is.null(country.pars$name)) paste("for", country.pars$name) else ""))
 				eval(parse(text=cmd))
 			}
 		} else { # all countries

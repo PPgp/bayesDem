@@ -17,7 +17,7 @@ bayesDem.go <- function(wpp.year.tfr=tfr.wpp.year.default, wpp.year.e0=e0.wpp.ye
 	
 	# main window
 	main.win <<- gwindow(paste('Bayesian Demographer  v.', 
-			packageVersion("bayesDem")), visible=FALSE, parent=c(400,150))
+			packageVersion("bayesDem")), visible=FALSE, parent=c(400,50))
 	main.g <- ggroup(horizontal=FALSE, container=main.win)
 	
 	# notebook with tabs
