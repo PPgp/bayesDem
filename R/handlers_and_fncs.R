@@ -198,8 +198,8 @@ show.summary <- function(h, ...) {
 	sink()
 	close(con)
 	info.win <- gwindow('Directory Info', parent=h$action$mw, width=500, height=400)
-	gtext(info, container=info.win)
-
+	gt <- gtext("", container=info.win)
+	insert(gt, info)
 }
 
 get.parameters <- function(par.names, env, quote=FALSE, retrieve.from.widgets=TRUE) {
