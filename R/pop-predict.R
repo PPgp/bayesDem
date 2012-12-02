@@ -208,11 +208,11 @@ run.pop.aggregation <- function(h, ...) {
 						)
 	params <- get.parameters(param.names, e, h$action$script)
 	params.inputs <- list()
-	if(params['method'] == 'regional') {
+	if(svalue(e$method) == 'regional') {
 		param.input.names.opt <- list(text=c('tfr.sim.dir', 'e0M.sim.dir', 'e0F.sim.dir'))
 		params.inputs <- c(params.inputs, get.parameters(param.input.names.opt, e$inputs, h$action$script))
 		if(svalue(e$inputs$e0M.joint)) 
-			params.inputs$e0M.sim.dir <- 'joint_'
+			params.inputs$e0M.sim.dir <- if (h$action$script) "'joint_'" else 'joint_'
 	}
 	params$regions <- e$selected.regions
 	if(is.null(params$regions)) {

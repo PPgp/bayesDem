@@ -120,7 +120,8 @@ create.graphics.window <- function(parent, title='', dpi=80, ps=10, ...) {
 create.script.widget <- function(script, parent, package) {
 	script.widget <- gwindow(paste(package, 'commands'), parent=parent, visible=FALSE, width=600, height=150)
 	set.widget.bgcolor(script.widget, "white")
-	gtext(script, container=script.widget)
+	gt <- gtext("", container=script.widget)
+	insert(gt, script)
 	addHandlerFocus(script.widget, handler=function(h, ...) focus(h$obj) <- TRUE)
 	visible(script.widget) <- TRUE
 	focus(script.widget) <- TRUE
