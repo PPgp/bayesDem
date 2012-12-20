@@ -82,8 +82,8 @@ pop.show.trajectories.group <- function(g, main.win, parent.env) {
 								enabled(e$start.year) <- !by.age
 								enabled(e$end.year) <- !by.age
 								enabled(e$year) <- by.age
-								if(by.age) enable(e$TableB.show.traj) <- TRUE
-								else enable(e$TableB.show.traj) <- e$sum.over.ages 
+								if(by.age) enabled(e$TableB.show.traj) <- TRUE
+								else enabled(e$TableB.show.traj) <- e$sum.over.ages 
 								})
 	lo[4,3, anchor=leftcenter] <- glabel('Year:', container=lo)
 	lo[4,4] <- e$year <- gedit('', width=4, container=lo)
