@@ -401,7 +401,7 @@ e0.show.traces.group <- function(g, main.win, parent.env) {
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'e0'
-	.create.partraces.settings.group(g, e, par.names=e0.parameter.names(), par.names.cs=e0.parameter.names.cs())
+	.create.partraces.settings.group(g, e, main.win, par.names=e0.parameter.names(), par.names.cs=e0.parameter.names.cs())
 	addSpring(g)
 	button.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='e0.partraces.plot', package='bayesLife', parent.group=button.g,
@@ -428,6 +428,7 @@ e0.showParTraces <- function(h, ...) {
 		if(is.null(country.pars)) return(NULL)
 	}	
 	if(print.summary) {
+		mc.summary <- c()
 		warn <- getOption('warn')
 		options(warn=-1) # disable warning messages
 		mcmc.set <- get.e0.mcmc(params[['sim.dir']])

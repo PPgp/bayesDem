@@ -30,7 +30,7 @@ e0mcmc.all.countries.group <- function(g, main.win, parent) {
 	timelo[2,3:8] <- e$my.e0.file <- bDem.gfilebrowse(eval(defaults$my.e0.file), type='open', 
 					  width=30, quote=FALSE, container=timelo)
 	addSpace(g, 10)
-	.create.mcmc.process.group(g, e, defaults, type='e0', advance.settigs.function=e0mcmc.advance.settings)
+	.create.mcmc.process.group(g, e, main.win, defaults, type='e0', advance.settigs.function=e0mcmc.advance.settings)
 	addSpace(g, 10)
 	.create.status.label(g, e)
 	addSpring(g)
@@ -74,8 +74,7 @@ e0mcmc.run <- function(h, ...) {
 	if(!has.required.arguments(list(output.dir='Simulation directory'), env=e)) return()
 	param.names <- list(numeric=c('buffer.size', 'nr.nodes', 'iter', 'thin', 'nr.chains', 'start.year', 
 									'present.year', 'seed'),
-						text=c('output.dir', 'my.e0.file',
-								'sex'),
+						text=c('output.dir', 'my.e0.file', 'sex', 'compression.type'),
 						logical=c('verbose', 'parallel'))
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	params[['wpp.year']] <- h$action$wpp.year

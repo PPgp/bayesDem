@@ -200,7 +200,7 @@ create.dlcurves.group <- function(g, parent.env, main.win) {
 	bDem.gbutton(action=GraphB.dlc, container=dlc.bg)
 }
 
-.create.partraces.settings.group <- function(g, e, par.names, par.names.cs) {
+.create.partraces.settings.group <- function(g, e, main.win, par.names, par.names.cs) {
 	leftcenter <- c(-1,0)
 	addSpace(g, 10)	
 	f <- gframe("<span color='blue'>Parameter traces settings</span>", markup=TRUE, 
@@ -255,7 +255,7 @@ create.partraces.group <- function(g, parent.env, main.win) {
 	e <- new.env()
 	e$sim.dir <- parent.env$sim.dir
 	e$pred.type <- 'tfr'
-	.create.partraces.settings.group(g, e, par.names=tfr.parameter.names(), par.names.cs=tfr.parameter.names.cs())
+	.create.partraces.settings.group(g, e, main.win, par.names=tfr.parameter.names(), par.names.cs=tfr.parameter.names.cs())
 	addSpring(g)
 	traces.bg <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='tfr.partraces.plot', package='bayesTFR', parent.group=traces.bg,
@@ -722,6 +722,7 @@ showParTraces <- function(h, ...) {
 		if(is.null(country.pars)) return(NULL)
 	}	
 	if(print.summary) {
+		mc.summary <- c()
 		warn <- getOption('warn')
 		options(warn=-1) # disable warning messages
 		mcmc.set <- get.tfr.mcmc(params[['sim.dir']])
@@ -854,6 +855,7 @@ showConvergenceDiag <- function(h, ...) {
 
 showDiagInfo <- function(h, ...) {
 	diag <- h$action$diag
+	conv.diag <- c()
 	con <- textConnection("conv.diag", "w", local=TRUE)
 	sink(con)
 	summary(diag, expand=TRUE)

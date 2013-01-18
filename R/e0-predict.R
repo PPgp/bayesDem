@@ -96,7 +96,7 @@ e0.pred.extra.countries.group <- function(g, main.win, parent) {
 	defaults <- formals(e0.predict.extra) # default argument values
 	e$sim.dir <- parent$sim.dir
 	e$pred.type <- 'e0'
-	.create.extra.countries.group(g, e, defaults)
+	.create.extra.countries.group(g, e, main.win, defaults)
 	addSpring(g)
 	predict.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='e0.predict.extra', package='bayesLife', 

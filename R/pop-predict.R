@@ -414,9 +414,10 @@ selectRegionMenuPop <- function(h, ...) {
 	if (!is.null(h$action$env$region.sel.win)) 
 			visible(h$action$env$region.sel.win) <- TRUE
 	else {
-		data(LOCATIONS, package='bayesPop')
+		e <- new.env()
+		data(LOCATIONS, package='bayesPop', envir=e)
 		
-		region.table <- LOCATIONS[is.element(LOCATIONS[,'location_type'], c(0,2,3)), c("country_code", "name")]
+		region.table <- e$LOCATIONS[is.element(e$LOCATIONS[,'location_type'], c(0,2,3)), c("country_code", "name")]
 		names(region.table) <- c('code', 'name')
 		h$action$env$region.table <- region.table
 		h$action$env$region.sel.win <- win <- gwindow('Select regions', 

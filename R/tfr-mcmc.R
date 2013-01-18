@@ -34,7 +34,7 @@ TFRrunMCMCgroup <- function(g, main.win, parent) {
 	}
 }
 
-.create.mcmc.process.group <- function(g, e, defaults, type='tfr', advance.settigs.function=mcmc.advance.settings) {
+.create.mcmc.process.group <- function(g, e, main.win, defaults, type='tfr', advance.settigs.function=mcmc.advance.settings) {
 	leftcenter <- c(-1,0)
 	g2 <- ggroup(horizontal=TRUE, container=g)
 	mcmc.g <- gframe("<span color='blue'>MCMC</span>", markup=TRUE, horizontal=FALSE, spacing=10, container=g2)
@@ -53,7 +53,9 @@ TFRrunMCMCgroup <- function(g, main.win, parent) {
 	.enable.auto.run(defaults$iter=='auto', e)
 	mclo[3,3, anchor=leftcenter] <- glabel("RNG seed:")
 	mclo[3,4] <- e$seed <- gedit(defaults$seed, width=4)
-	mclo[4,1:4] <- bDem.gbutton('  Advanced MCMC Settings  ',  handler=advance.settigs.function, 
+	mclo[4,1, anchor=leftcenter] <- glabel("File compression:")
+	mclo[4,2] <- e$compression.type <- bDem.gdroplist(c('None', 'xz', 'bz', 'gz'), container=mclo)
+	mclo[5,1:4] <- bDem.gbutton('  Advanced MCMC Settings  ',  handler=advance.settigs.function, 
 				action=list(mw=main.win, env=e))	
 	addSpring(g2)
 	.create.process.group(g2, e, defaults)
@@ -81,7 +83,7 @@ mcmc.all.countries.group <- function(g, main.win, parent) {
 					  width=30, quote=FALSE, container=timelo)
 					  
 	addSpace(g, 10)
-	.create.mcmc.process.group(g, e, defaults)
+	.create.mcmc.process.group(g, e, main.win, defaults)
 	addSpace(g, 10)
 	.create.status.label(g, e)
 	addSpring(g)
@@ -104,7 +106,7 @@ mcmc.run <- function(h, ...) {
 	if(!has.required.arguments(list(output.dir='Simulation directory'), env=e)) return()
 	param.names <- list(numeric=c('buffer.size', 'nr.nodes', 'iter', 'thin', 'nr.chains', 'start.year', 
 									'present.year', 'seed', 'verbose.iter'),
-						text=c('output.dir', 'my.tfr.file'),
+						text=c('output.dir', 'my.tfr.file', 'compression.type'),
 						logical=c('verbose', 'parallel'))
 	params <- get.parameters(param.names, e, quote=h$action$script)
 	params[['wpp.year']] <- h$action$wpp.year

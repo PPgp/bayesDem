@@ -8,7 +8,7 @@ e0ContinueMCMCgroup <- function(g, main.win, parent=NULL) {
 	e$run.prediction <- FALSE
 	addSpace(g, 10)
 	g2 <- ggroup(horizontal=TRUE, container=g)
-	.create.autoconf.cont.group(g2, e, defaults)
+	.create.autoconf.cont.group(g2, e, main.win, defaults)
 	# e$run.auto <- gcheckbox("Auto simulation", checked=FALSE, 
 							# container=auto.g, handler=function(h,...){.enable.auto.cont(svalue(h$obj), e)})
 	# e$auto.conf.b <- gbutton(' Configure auto run ', container=auto.g, handler=configure.auto.run, 

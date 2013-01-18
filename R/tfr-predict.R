@@ -150,7 +150,7 @@ get.tfr.prediction.status <- function(h, ...)
 	.update.status(h$action$sb, 'bDem.TFRpred.status', 'Running TFR prediction ...')
 
 
-.create.extra.countries.group <- function(g, e, defaults) {
+.create.extra.countries.group <- function(g, e, main.win, defaults) {
 	addSpace(g, 10)
 	countries.g <- gframe("<span color='blue'>Countries/Regions selection</span>", markup=TRUE, 
 							horizontal=FALSE, container=g)
@@ -182,7 +182,7 @@ tfr.pred.extra.countries.group <- function(g, main.win, parent) {
 	defaults <- formals(tfr.predict.extra) # default argument values
 	e$sim.dir <- parent$sim.dir
 	e$pred.type <- 'tfr'
-	.create.extra.countries.group(g, e, defaults)
+	.create.extra.countries.group(g, e, main.win, defaults)
 	addSpring(g)
 	predict.g <- ggroup(horizontal=TRUE, container=g)
 	create.help.button(topic='tfr.predict.extra', package='bayesTFR', 

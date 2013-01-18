@@ -5,7 +5,7 @@ TFRcontinueMCMCgroup <- function(g, main.win, parent=NULL) {
 	e$run.prediction <- FALSE
 	addSpace(g, 10)
 	g2 <- ggroup(horizontal=TRUE, container=g)
-	.create.autoconf.cont.group(g2, e, defaults)
+	.create.autoconf.cont.group(g2, e, main.win, defaults)
 	.create.process.group(g2, e, defaults, show.buffer.size=FALSE)
 	addSpace(g, 10)
 	.create.status.label(g, e)
@@ -22,7 +22,7 @@ TFRcontinueMCMCgroup <- function(g, main.win, parent=NULL) {
 	return(e)
 }
 
-.create.autoconf.cont.group <- function(g, e, defaults) {
+.create.autoconf.cont.group <- function(g, e, main.win, defaults) {
 	leftcenter <- c(-1,0)
 	mcmc.g <- gframe("<span color='blue'>MCMC</span>", markup=TRUE, horizontal=FALSE, spacing=10, container=g)
 	mclo <- glayout(container=mcmc.g)

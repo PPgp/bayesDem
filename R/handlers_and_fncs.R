@@ -120,9 +120,9 @@ create.graphics.window <- function(parent, title='', dpi=80, ps=10, ...) {
 create.script.widget <- function(script, parent, package) {
 	script.widget <- gwindow(paste(package, 'commands'), parent=parent, visible=FALSE, width=600, height=150)
 	set.widget.bgcolor(script.widget, "white")
-	#gt <- gtext("", container=script.widget)
-	#insert(gt, script)
-	gtext(script, container=script.widget)
+	gt <- gtext("", container=script.widget)
+	insert(gt, script)
+	#gtext(script, container=script.widget)
 	addHandlerFocus(script.widget, handler=function(h, ...) focus(h$obj) <- TRUE)
 	visible(script.widget) <- TRUE
 	focus(script.widget) <- TRUE
@@ -177,7 +177,7 @@ show.summary <- function(h, ...) {
 	# get prediction
 	pred <- do.call(paste('get.', type, '.prediction', sep=''), list(sim.dir=dir))
 	options(warn=warn)
-	
+	info <- c()
 	con <- textConnection("info", "w", local=TRUE)
 	sink(con)
 	if(!h$action$no.mcmc) {
@@ -200,9 +200,9 @@ show.summary <- function(h, ...) {
 	sink()
 	close(con)
 	info.win <- gwindow('Directory Info', parent=h$action$mw, width=500, height=400)
-	#gt <- gtext("", container=info.win)
-	#insert(gt, info)
-	gtext(info, container=info.win)
+	gt <- gtext("", container=info.win)
+	insert(gt, info)
+	#gtext(info, container=info.win)
 }
 
 get.parameters <- function(par.names, env, quote=FALSE, retrieve.from.widgets=TRUE) {
