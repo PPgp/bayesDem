@@ -103,7 +103,7 @@ mcmc.all.countries.group <- function(g, main.win, parent) {
 	phaseIII.g <- ggroup(label="<span color='darkred'>Phase III</span>", markup=TRUE, horizontal=FALSE, container=type.nb)
 	addSpace(phaseIII.g, 10)
 	e$phase3 <- new.env()
-	.create.mcmc.process.group(phaseIII.g, e$phase3, main.win, defaults3, mcmc.label="MCMC Phase III", 
+	.create.mcmc.process.group(phaseIII.g, e$phase3, main.win, defaults3, type='tfr3', mcmc.label="MCMC Phase III", 
 								advance.settigs.function=mcmc3.advance.settings,
 								process.label="Process control for Phase III")
 	svalue(type.nb) <- 1
@@ -178,6 +178,7 @@ mcmc.run <- function(h, ...) {
 		else return(NULL)
 	}
 	run.prediction <- (auto[[1]]$run.auto || auto[[2]]$run.auto) && (e$run.prediction || e$phase3$run.prediction)
+	use.diag <- if(auto[[1]]$run.auto && e$run.prediction) 'TRUE' else 'FALSE'
 	if (h$action$script) {
 		commands <- ''
 		if(is.element(1, mcmc.type)) 
@@ -186,7 +187,8 @@ mcmc.run <- function(h, ...) {
 			commands <- paste(commands, '\n\nm3 <- run.tfr3.mcmc(', parlist[[1]]$output.dir, ', ', 
 									assemble.arguments(c(parlist[[2]], e$phase3$params)), ')', sep=' ')
 		if(run.prediction) 
-			commands <- paste(commands, '\n\ntfr.predict(sim.dir=,', parlist[[1]]$output.dir, ', use.diagnostics=TRUE)', sep='')
+			commands <- paste(commands, '\n\ntfr.predict(sim.dir=,', parlist[[1]]$output.dir, 
+							', use.diagnostics=',use.diag, ', replace.output=TRUE)', sep='')
 		create.script.widget(commands, h$action$mw, package="bayesTFR")
 	} else { # run a simulation
 		run <- FALSE
@@ -208,21 +210,21 @@ mcmc.run <- function(h, ...) {
 			if(is.element(1, mcmc.type)) { # run phase II MCMCs
 				if(file.exists(params[['output.dir']])) unlink(params[['output.dir']], recursive=TRUE)
 				m <- .run.simulation(e, handler=get.tfr.simulation.status, option='bDem.TFRmcmc', 
-								call='run.tfr.mcmc', params=c(parlist[[1]], e$params), 
+								call='run.tfr.mcmc', params=parlist[[1]], 
 								sim.name='TFR MCMC Phase II', main.win=h$action$mw,
 								action=list(sb=e$statuslabel, sim.dir=params[['output.dir']]),
 								interval=5000)
 			} 
 			if(is.element(2, mcmc.type)) {
 				m3 <- .run.simulation(e, handler=get.tfr.simulation.status, option='bDem.TFRmcmc', 
-								call='run.tfr3.mcmc', params=c(parlist[[2]], e$params), 
+								call='run.tfr3.mcmc', params=c(list(sim.dir=params[['output.dir']]), parlist[[2]]), 
 								sim.name='TFR MCMC Phase III', main.win=h$action$mw,
 								action=list(sb=e$statuslabel, sim.dir=params[['output.dir']]),
 								interval=5000)
 			}
 			if(run.prediction) {
 				.run.prediction(e, handler=get.tfr.prediction.status, option='bDem.TFRpred', 
-								call='tfr.predict', params=list(sim.dir=params[['output.dir']], use.diagnostics=TRUE), 
+								call='tfr.predict', params=list(sim.dir=params[['output.dir']], use.diagnostics=eval(use.diag), replace.output=TRUE), 
 								sim.name='TFR prediction', main.win=h$action$mw,
 								action=list(sb=e$statuslabel),
 								interval=1000)
@@ -279,7 +281,7 @@ configure.auto.run <- function(h, ...) {
 		defaults <- eval(formals(paste("run.", type, ".mcmc", sep=''))$auto.conf)
 	else {
 		defaults <- do.call(paste('.get.defaults.for.auto.cont.', type, sep=''), list(h$action$env))
-		if(is.null(defaults)) defaults <- eval(formals(paste("run.", type, ".mcmc", sep=''))$auto.conf)
+		if(is.null(defaults)) return()
 	}
 	set.defaults <- function(h2, ...) {
 		for (par in names(defaults)) {
