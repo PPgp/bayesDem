@@ -56,7 +56,7 @@ TFRrunMCMCgroup <- function(g, main.win, parent) {
 	mclo[3,4] <- e$seed <- gedit(defaults$seed, width=4)
 	mclo[4,1, anchor=leftcenter] <- glabel("File compression:")
 	mclo[4,2] <- e$compression.type <- bDem.gdroplist(c('None', 'xz', 'bz', 'gz'), container=mclo)
-	mclo[5,1:4] <- bDem.gbutton('  Advanced MCMC Settings  ',  handler=advance.settigs.function, 
+	mclo[5,1:4] <- bDem.gbutton('Priors & Advanced MCMC Settings',  handler=advance.settigs.function, 
 				action=list(mw=main.win, env=e))	
 	addSpring(g2)
 	.create.process.group(g2, e, defaults, label=process.label)
