@@ -756,7 +756,7 @@ mcmc.run.extra <- function(h, ...) {
 }
 
 get.wpp.years <- function() {
-	pkg.data.dir <- file.path(.find.package("bayesTFR"), "data")
+	pkg.data.dir <- file.path(find.package("bayesTFR"), "data")
 	files <- list.files(pkg.data.dir)
 	#filter UNx.txt files
 	un.files <- grep('^UN[0-9]{4}.txt$', files, value=TRUE)
