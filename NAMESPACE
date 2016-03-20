@@ -5,5 +5,7 @@ export(
 import(#"cairoDevice", 
 		"wpp2015", "RGtk2", gWidgets, gWidgetsRGtk2, bayesTFR, bayesLife, bayesPop)
 
+importFrom("grDevices", "dev.cur", "dev.off", "dev.set", "png")
+importFrom("utils", "packageVersion")
 
 
