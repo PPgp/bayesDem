@@ -189,7 +189,7 @@ pop.show.cohort.trajectories.group <- function(g, main.win, parent.env) {
 	e$pred.type <- 'pop'
 	e$new.country.select.if.changed <- c('aggregation.dl')
 	defaults.pred <- formals(pop.predict)
-	defaults.cohort <- formals(bayesPop:::pop.cohorts.plot)
+	defaults.cohort <- formals(bayesPop::pop.cohorts.plot)
 		
 	addSpace(g, 10)
 	country.f <- gframe("<span color='blue'>Country settings</span>", markup=TRUE, 
@@ -329,6 +329,7 @@ show.pop.cohorts <- function(h, ...) {
 			table.values <- table.values[cohorts]
 		}
 		# print
+		cohort.table <- c()
 		con <- textConnection("cohort.table", "w", local=TRUE)
 		sink(con)
 		print(table.values)

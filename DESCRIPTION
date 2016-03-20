@@ -8,6 +8,6 @@ Maintainer: Hana Sevcikova <hanas@uw.edu>
 Depends: R (>= 2.14.2), gWidgets, gWidgetsRGtk2, bayesTFR (>= 5.0-0), bayesLife (>= 3.0-0), bayesPop (>= 6.0-0)
 Suggests: wpp2012, wpp2010
 Imports: RGtk2, wpp2015
-Description: Graphical user interface for the packages bayesTFR, bayesLife and bayesPop
+Description: Provides graphical user interface for the packages bayesTFR, bayesLife and bayesPop.
 License: GPL (>= 2)
 URL: http://bayespop.csss.washington.edu
