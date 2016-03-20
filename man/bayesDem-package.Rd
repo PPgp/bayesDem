@@ -10,7 +10,7 @@ Provides Graphical user interface for the packages \pkg{bayesTFR}, \pkg{bayesLif
 \tabular{ll}{
 Package: \tab bayesDem\cr
 Version: \tab 2.5-0\cr
-Date: \tab 2016-3-18\cr
+Date: \tab 2016-3-19\cr
 License: \tab  GPL (>= 2)\cr
 URL: \tab \url{http://bayespop.csss.washington.edu}\cr
 }

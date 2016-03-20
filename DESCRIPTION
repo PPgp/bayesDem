@@ -2,7 +2,7 @@ Package: bayesDem
 Type: Package
 Title: Graphical User Interface for bayesTFR, bayesLife and bayesPop
 Version: 2.5-0
-Date: 2016-3-18
+Date: 2016-3-19
 Author: Hana Sevcikova <hanas@uw.edu>
 Maintainer: Hana Sevcikova <hanas@uw.edu>
 Depends: R (>= 2.14.2), gWidgets, gWidgetsRGtk2, bayesTFR (>= 5.0-0), bayesLife (>= 3.0-0), bayesPop (>= 6.0-0)

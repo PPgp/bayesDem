@@ -2,7 +2,9 @@
 -----
 Updated to wpp2015.
 
-Added fixed.mx and fixed.pasfr to pop tab.
+Added fixed.mx and fixed.pasfr to pop prediction tab.
+
+Added plotting cohort trajectories to the pop results tab.
 
 2.4-0/1 (4/28/2014)
 -----
