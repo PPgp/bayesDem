@@ -59,7 +59,7 @@ TFRrunMCMCgroup <- function(g, main.win, parent) {
 	tooltip(e$thin) <- "Thinning for storing MCMCs on disk."
 	.enable.auto.run(defaults$iter=='auto', e)
 	mclo[3,3, anchor=leftcenter] <- glabel("RNG seed:")
-	mclo[3,4] <- e$seed <- gedit(defaults$seed, width=4)
+	mclo[3,4] <- e$seed <- gedit(replace.null.with.char(defaults$seed), width=4)
 	mclo[4,1, anchor=leftcenter] <- glabel("File compression:")
 	mclo[4,2] <- e$compression.type <- bDem.gdroplist(c('None', 'xz', 'bz', 'gz'), container=mclo)
 	mclo[5,1:4] <- bDem.gbutton('Priors & Advanced MCMC Settings',  handler=advance.settigs.function, 
@@ -86,7 +86,7 @@ mcmc.all.countries.group <- function(g, main.win, parent) {
 	timelo[1,6, anchor=c(1,0)] <- wpp <- glabel(parent$wpp.year, container=timelo)
 	tooltip(wpp) <- 'To change this start bayesDem with wpp.year as argument.'
 	timelo[2,1:2, anchor=leftcenter] <- glabel("User-defined TFR file:", container=timelo)
-	timelo[2,3:6] <- e$my.tfr.file <- bDem.gfilebrowse(eval(defaults$my.tfr.file), type='open', 
+	timelo[2,3:6] <- e$my.tfr.file <- bDem.gfilebrowse(text="", initial.dir=eval(defaults$my.tfr.file), type='open', 
 					  width=30, quote=FALSE, container=timelo)
 	tooltip(e$my.tfr.file) <- 'Overwrites default wpp data.'
 					  
@@ -330,7 +330,7 @@ configure.auto.run <- function(h, ...) {
 	mclo[1,1] <- glabel("Number of chains:", container=mclo)
 	mclo[1,2] <- e$nr.chains <- gedit(defaults$nr.chains, width=2, container=mclo)
 	mclo[2,1] <- glabel("Number of iterations:", container=mclo)
-	mclo[2,2] <- e$iter <- gedit(defaults$iter, width=7, container=mclo)
+	mclo[2,2] <- e$iter <- gedit(replace.null.with.char(defaults$iter), width=7, container=mclo)
 	tooltip(e$iter) <- "Number of iterations to run inititally after which the covergence is checked."
 	enabled(e$nr.chains) <- !cont.run
 
@@ -685,7 +685,7 @@ mcmc.advance.settings <- function(h, ...) {
 	# For showing selected countries
 	tlo[2,1:2, anchor=c(-1,0)] <- e$extra.country.label <- glabel('', container=tlo)
 	tlo[3,1, anchor=c(-1,0)] <- glabel(paste("User-defined ", label.type, " file:", sep=''), container=tlo)
-	tlo[3,2] <- e[[my.file.item]] <- bDem.gfilebrowse(eval(defaults[[my.file.item]]), type='open', 
+	tlo[3,2] <- e[[my.file.item]] <- bDem.gfilebrowse(text="", initial.dir=eval(defaults[[my.file.item]]), type='open', 
 					  width=30, quote=FALSE, container=tlo)
 	tooltip(e[[my.file.item]]) <- "Overwrites default WPP data."
 }
@@ -696,7 +696,7 @@ mcmc.advance.settings <- function(h, ...) {
 	iter.g <- gframe("<span color='blue'>MCMC</span>", markup=TRUE, horizontal=TRUE, container=g2)
 	itlo <- glayout(container=iter.g)
 	itlo[1,1] <- glabel("Number of iterations:", container=itlo)
-	itlo[1,2] <- e$iter <- gedit(defaults$iter, width=7, container=itlo)
+	itlo[1,2] <- e$iter <- gedit(replace.null.with.char(defaults$iter), width=7, container=itlo)
 	tooltip(e$iter) <- "Leave empty if the same as the main simulation."
 	itlo[2,1] <- glabel("Thin:", container=itlo)
 	itlo[2,2] <- e$thin <- gedit(defaults$thin, width=2, container=itlo)

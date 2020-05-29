@@ -5,7 +5,7 @@ Version: 2.5-1
 Date: 2016-11-21
 Author: Hana Sevcikova <hanas@uw.edu>
 Maintainer: Hana Sevcikova <hanas@uw.edu>
-Depends: R (>= 2.14.2), gWidgets, gWidgetsRGtk2, bayesTFR (>= 5.0-4), bayesLife (>= 3.0-1), bayesPop (>= 6.0-0)
+Depends: R (>= 2.14.2), gWidgets2, gWidgets2RGtk2, bayesTFR (>= 5.0-4), bayesLife (>= 3.0-1), bayesPop (>= 6.0-0)
 Suggests: wpp2012, wpp2010
 Imports: RGtk2, wpp2015
 Description: Provides graphical user interface for the packages 'bayesTFR', 'bayesLife' and 'bayesPop'.

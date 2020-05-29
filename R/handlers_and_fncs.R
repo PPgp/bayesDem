@@ -63,7 +63,7 @@ bDem.gdroplist <- function(items, ...) {
 
 bDem.gfilebrowse <- function(...) {
 	fb <- gfilebrowse(...)
-	get.filebrowse.button(fb)$modifyBg("normal", color.button)
+	#get.filebrowse.button(fb)$modifyBg("normal", color.button)
 	return(fb)
 }
 
@@ -85,7 +85,7 @@ create.sim.dir.widget <- function(env, parent, main.win, default, dir.widget.nam
 	sim.g <- ggroup(horizontal=TRUE, container=parent)
 	glabel("Simulation directory:", container=sim.g)
 	#glabel("<span color='red'>*</span>", markup=TRUE, container=sim.g)
-	env[[dir.widget.name]] <- bDem.gfilebrowse(default, type='selectdir', width=40, quote=FALSE, container=sim.g)
+	env[[dir.widget.name]] <- bDem.gfilebrowse(text="", initial.dir=default, type='selectdir', width=40, quote=FALSE, container=sim.g)
 	create.info.button(dir.widget.name, sim.g, main.win, env, ...)
 }
 
@@ -317,4 +317,9 @@ get.tfr.UN.data <- function(meta) {
 
 get.e0.UN.data <- function(meta) {
 	return(bayesTFR:::load.bdem.dataset(paste('e0', meta$sex, sep=''), meta$wpp.year))
+}
+
+replace.null.with.char <- function(x) {
+    if(is.null(x)) return ("")
+    return(x)
 }
